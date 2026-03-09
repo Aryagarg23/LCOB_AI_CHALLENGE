@@ -9,10 +9,10 @@ export default function Home() {
         <p style={{ color: 'var(--accent-cyan)', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
           Kautz-Uible Economics Institute · Agentic AI Challenge
         </p>
-        <h1 style={{ marginBottom: '1rem' }}>AI-Powered Business Strategy</h1>
+        <h1 style={{ marginBottom: '1rem' }}>AI-Powered Market Analysis Tool</h1>
         <p style={{ fontSize: '1.1rem', maxWidth: '650px', margin: '0 auto 2rem auto', lineHeight: 1.7 }}>
-          Praxis Economics synthesizes 8 autonomous research domains — from Federal Reserve data 
-          to local competitor reviews — into a comprehensive pricing and market viability report for <strong style={{ color: 'var(--text-primary)' }}>any small business</strong>.
+          Praxis Economics synthesizes autonomous research domains — from macroeconomic data 
+          to competitor reviews — into a structured market viability report for <strong style={{ color: 'var(--text-primary)' }}>small businesses</strong>.
         </p>
         <Link href="/simulate" className="btn-primary" style={{ fontSize: '1.05rem', padding: '0.85rem 2.5rem' }}>
           Start Your Analysis →
@@ -35,7 +35,7 @@ export default function Home() {
           <strong style={{ color: 'var(--text-primary)' }}> Hedonic Pricing Theory</strong>, 
           <strong style={{ color: 'var(--text-primary)' }}> Hotelling's Spatial Competition</strong>, and 
           <strong style={{ color: 'var(--text-primary)' }}> dynamic Price Elasticity of Demand</strong> to 
-          generate pricing strategies grounded in real data and economic theory.
+          generate pricing models based on available data and economic frameworks.
         </p>
       </section>
 
@@ -48,8 +48,8 @@ export default function Home() {
           {[
             { num: '1', title: 'Upload & Share', desc: 'Upload photos of your business, products, or branding. Optionally attach sales spreadsheets or financial records.' },
             { num: '2', title: 'Needfinding Interview', desc: 'Have a natural conversation with our AI consultant. It asks targeted questions to understand your business, market, and what specific decision you need help with.' },
-            { num: '3', title: 'Autonomous Research', desc: '8 specialized modules simultaneously search the web, analyze your data, and research your market — all in real-time with live progress updates.' },
-            { num: '4', title: 'Strategy Report + Q&A', desc: 'Receive a comprehensive, sourced report. Ask follow-up questions — the system can trigger additional research. All Q&A is appended to the final deliverable.' },
+            { num: '3', title: 'Autonomous Research', desc: 'Specialized modules search the web, analyze your data, and review the market while providing progress updates.' },
+            { num: '4', title: 'Strategy Report + Q&A', desc: 'Receive a structured, sourced report. Ask follow-up questions — the system can process additional requests. Q&A is appended to the deliverable.' },
           ].map((s) => (
             <div key={s.num} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>{s.num}</div>
@@ -65,9 +65,9 @@ export default function Home() {
         <div className="grid grid-cols-2" style={{ gap: '0.75rem' }}>
           {[
             { title: 'Brand & Aesthetics', desc: 'Visual analysis + hedonic pricing benchmarks for willingness-to-pay.' },
-            { title: 'Local Demographics', desc: 'Census data for income, neighborhood profile, and price ceilings.' },
-            { title: 'Internal Data Analytics', desc: 'Code execution against uploaded/simulated databases for PED.' },
-            { title: 'Social Sentiment', desc: 'Live review scraping from Yelp, Google, and social media.' },
+            { title: 'Local Demographics', desc: 'Census data for income, neighborhood profiles, and demographic segments.' },
+            { title: 'Internal Data Analytics', desc: 'Data processing against uploaded/simulated databases.' },
+            { title: 'Social Sentiment', desc: 'Review aggregation from various public platforms.' },
             { title: 'Macroeconomic Tracking', desc: 'Fed Funds Rate, CPI, consumer spending from FRED.' },
             { title: 'Supply Chain Costs', desc: 'Industry-specific commodity and wholesale cost analysis.' },
             { title: 'Urban Mobility', desc: 'Walk Score, transit, and nearby anchor analysis.' },

@@ -4,20 +4,20 @@
 [![Repository](https://img.shields.io/badge/GitHub-Repository-black.svg)](https://github.com/Aryagarg23/LCOB_AI_CHALLENGE)
 [![Next.js](https://img.shields.io/badge/Built_with-Next.js_14-black.svg)](https://nextjs.org/)
 
-**Praxis Economics** is an advanced Multi-Agent system designed for the [KU Economics Institute Agentic AI Challenge](https://www.kueconomicsinstitute.org/agentic-ai-challenge). 
+**Praxis Economics** is a Multi-Agent system designed for the [KU Economics Institute Agentic AI Challenge](https://www.kueconomicsinstitute.org/agentic-ai-challenge). 
 
-Praxis serves as a world-class strategic consulting firm, generating incredibly deep, localized, and economically sound business viability reports for any aspiring entrepreneur. It utilizes a sophisticated 13-agent AI swarm to mitigate the severe **information asymmetries** and **search frictions** that typically plague Small and Medium Business (SMB) formation.
+Praxis serves as a strategic analysis tool, generating localized business viability reports for entrepreneurs. It utilizes a 13-agent AI architecture to address the **information asymmetries** and **search frictions** that often affect Small and Medium Business (SMB) formation.
 
 ---
 
 ## 📉 The Economic Problem
 
-In classical economics, efficient markets require perfect information. However, the formation of Small and Medium Businesses (SMBs) is heavily defined by **Information Asymmetry** and **Search Frictions**:
+In economics, efficient markets require accessible information. However, the formation of Small and Medium Businesses (SMBs) is often characterized by **Information Asymmetry** and **Search Frictions**:
 
-1.  **Credit Rationing & Asymmetry:** Entrepreneurs lack access to the expensive, institutional-grade market research required by lenders. This asymmetry leads to "credit rationing"—where financial institutions refuse to lend to potentially viable SMBs because the cost of verifying their viability is too high.
-2.  **Search Frictions:** Determining local market saturation, competitor pricing, foot-traffic multipliers, and realistic rent constraints requires immense time and capital. These frictions often lead to suboptimal capital allocation and high early-stage failure rates.
+1.  **Credit Rationing & Asymmetry:** Entrepreneurs may lack access to comprehensive market research. This asymmetry can contribute to "credit rationing"—where financial institutions may hesitate to lend to unverified SMBs.
+2.  **Search Frictions:** Gathering data on local market saturation, competitor pricing, foot-traffic, and rent constraints requires time and resources. These frictions can lead to inefficient capital allocation.
 
-**The Solution:** Praxis Economics eliminates these frictions by democratizing access to elite, localized economic analysis. Our parallel-agent swarm executes what would take human analysts weeks in under 60 seconds.
+**The Strategy:** Praxis Economics aims to reduce these frictions by providing localized economic analysis through an automated, parallel-agent system.
 
 ---
 
@@ -56,7 +56,7 @@ The intelligence of Praxis lies in the strict economic specialization of its age
 
 ### 🧩 The Synthesis: From Raw Data to SMB Strategy
 
-Individually, these agents gather isolated economic variables. Together, they form a **comprehensive, institutional-grade business plan** designed specifically to protect and guide the SMB entrepreneur:
+Individually, these agents gather distinct economic variables. Together, they combine to form a **business strategy report** designed to guide the SMB entrepreneur:
 
 *   **Establishing the Financial Moat:** **Agent 6 (Commodities)** defines the absolute minimum cost to produce a good. **Agent 8 (Competitors)** defines the maximum price the local market will bear. **Agent 13 (Quant Math)** bridges this gap, instantly calculating the exact profit margin and how many units must be sold to cover the fixed lease costs identified by **Agent 10 (Real Estate)**. 
 *   **Validating the Addressable Market:** **Agent 11 (Demand)** estimates how many total customers exist online, while **Agent 7 (Urban Mobility)** calculates how many of those customers can actually *physically reach* the storefront. **Agent 2 (Demographics)** ensures those arriving customers actually have the disposable income necessary to convert.
@@ -96,7 +96,7 @@ graph TD
 ```
 
 ### Democratizing Business Intelligence
-Generated strategy reports are hosted as public artifacts via Supabase. This brings institutional-grade economic insights to the broader community at near-zero marginal cost.
+Generated strategy reports can be saved as artifacts via Supabase, allowing entrepreneurs to review and share their localized market analysis.
 
 ---
 
