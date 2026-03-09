@@ -13,32 +13,42 @@ export async function POST(req) {
 
     const systemPrompt = `You are a senior business strategy consultant at Praxis Economics. You just generated a comprehensive pricing and strategy report for the user's business.
 
-The user is a non-technical business owner asking follow-up questions about the strategy. You have access to a web_search tool — if the user asks a question requiring fresh data, current prices, new competitor information, or any factual lookup, use the tool to search the web and provide sourced answers.
+The user is a non-technical business owner asking follow-up questions about the strategy. Answer their questions relying solely on the context of the Strategy Report provided below and your general economic strategy knowledge. Do not attempt to use any tools or make live web searches.
 
 Always:
 - Be professional yet approachable
 - Cite specific data from the report when relevant
-- If you search the web, include the source URL in your response
 - Translate economic jargon into actionable business advice
 - Format responses with clear structure (bold, bullets) when helpful
 
 Context of the Strategy Report:
 ${artifactContext || 'No report context available. Speak generally about pricing strategy methodology.'}`;
 
+    console.log('API Chat: Received messages length', messages?.length);
+
     // Convert UIMessages to model messages for streamText
     const modelMessages = await convertToModelMessages(messages);
+    console.log('API Chat: successfully computed modelMessages', modelMessages?.length);
 
+    console.log('API Chat: executing streamText...');
     const result = streamText({
       model: getAgentModel('gpt-4.1-nano'),
-      tools: { webSearch: webSearchTool },
-      maxSteps: 3,
       system: systemPrompt,
       messages: modelMessages,
     });
-
-    return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse({
+      onError: (streamError) => {
+        require('fs').writeFileSync('stream-error.txt', streamError.stack || streamError.toString());
+        console.error('*** STREAM ERROR ***', streamError.stack || streamError);
+      }
+    });
   } catch (error) {
-    console.error('[Chat API Error]', error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    console.error('[Chat API Error]', error.stack || error);
+    return new Response(JSON.stringify({ 
+      error: error.stack || error.message,
+      msgType: typeof messages,
+      isArray: Array.isArray(messages),
+      msgDump: messages 
+    }), { status: 500 });
   }
 }

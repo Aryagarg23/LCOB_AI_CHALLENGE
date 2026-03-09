@@ -1,0 +1,11 @@
+AI_APICallError: Invalid schema for function 'webSearch': schema must be a JSON Schema of 'type: "object"', got 'type: "None"'.
+    at C:\Users\arya\.gemini\antigravity\scratch\agentic_ai_challenge\.next\dev\server\chunks\node_modules_f3ff0258._.js:3149:24
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async postToApi (C:\Users\arya\.gemini\antigravity\scratch\agentic_ai_challenge\.next\dev\server\chunks\node_modules_f3ff0258._.js:3022:36)
+    at async OpenAIResponsesLanguageModel.doStream (C:\Users\arya\.gemini\antigravity\scratch\agentic_ai_challenge\.next\dev\server\chunks\node_modules_@ai-sdk_openai_dist_index_mjs_19cd50d6._.js:5168:54)
+    at async fn (C:\Users\arya\.gemini\antigravity\scratch\agentic_ai_challenge\.next\dev\server\chunks\node_modules_ai_dist_index_mjs_b0116780._.js:7014:49)
+    at async C:\Users\arya\.gemini\antigravity\scratch\agentic_ai_challenge\.next\dev\server\chunks\node_modules_ai_dist_index_mjs_b0116780._.js:2366:28
+    at async _retryWithExponentialBackoff (C:\Users\arya\.gemini\antigravity\scratch\agentic_ai_challenge\.next\dev\server\chunks\node_modules_ai_dist_index_mjs_b0116780._.js:2624:16)
+    at async streamStep (C:\Users\arya\.gemini\antigravity\scratch\agentic_ai_challenge\.next\dev\server\chunks\node_modules_ai_dist_index_mjs_b0116780._.js:6972:116)
+    at async fn (C:\Users\arya\.gemini\antigravity\scratch\agentic_ai_challenge\.next\dev\server\chunks\node_modules_ai_dist_index_mjs_b0116780._.js:7361:17)
+    at async C:\Users\arya\.gemini\antigravity\scratch\agentic_ai_challenge\.next\dev\server\chunks\node_modules_ai_dist_index_mjs_b0116780._.js:2366:28

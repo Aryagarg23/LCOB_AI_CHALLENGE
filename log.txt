@@ -1,0 +1,52 @@
+data: {"type":"start"}
+
+data: {"type":"start-step"}
+
+data: {"type":"text-start","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","providerMetadata":{"openai":{"itemId":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85"}}}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":"Hello"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":"!"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" How"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" can"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" I"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" assist"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" you"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" today"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" with"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" your"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" business"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" strategy"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" or"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" any"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" questions"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" about"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" the"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":" report"}
+
+data: {"type":"text-delta","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","delta":"?"}
+
+data: {"type":"text-end","id":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85","providerMetadata":{"openai":{"itemId":"msg_0aecc2ecd16c3d550069ae4c68c184819a90a66cf95c419b85"}}}
+
+data: {"type":"finish-step"}
+
+data: {"type":"finish","finishReason":"stop"}
+
+data: [DONE]
+
