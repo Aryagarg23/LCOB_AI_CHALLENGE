@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
 
 const STEPS = {
   UPLOAD: 0,
@@ -65,12 +64,10 @@ export default function SimulatePage() {
   };
 
   // Interview chat
-  const { messages: interviewMessages, sendMessage: sendInterviewMessage, status: interviewStatus } = useChat({
+  const { messages: interviewMessages, append: sendInterviewMessage, status: interviewStatus } = useChat({
     id: 'interview-chat',
-    transport: new DefaultChatTransport({
-      api: '/api/interview',
-      body: { businessContext: getFileContext() },
-    }),
+    api: '/api/interview',
+    body: { businessContext: getFileContext() },
   });
 
   // Watch for [READY_TO_ANALYZE] — auto-transition
@@ -86,12 +83,10 @@ export default function SimulatePage() {
   }, [interviewMessages]);
 
   // Post-report follow-up chat
-  const { messages: followUpMessages, sendMessage: sendFollowUpMessage, status: followUpStatus } = useChat({
+  const { messages: followUpMessages, append: sendFollowUpMessage, status: followUpStatus } = useChat({
     id: 'followup-chat',
-    transport: new DefaultChatTransport({
-      api: '/api/chat',
-      body: { artifactContext: result },
-    }),
+    api: '/api/chat',
+    body: { artifactContext: result },
   });
 
   const interviewLoading = interviewStatus === 'streaming' || interviewStatus === 'submitted';
@@ -99,13 +94,13 @@ export default function SimulatePage() {
 
   const sendInterview = () => {
     if (!interviewInputText.trim() || interviewLoading) return;
-    sendInterviewMessage({ text: interviewInputText });
+    sendInterviewMessage({ role: 'user', content: interviewInputText });
     setInterviewInputText('');
   };
 
   const sendFollowUp = () => {
     if (!followUpInputText.trim() || followUpLoading) return;
-    sendFollowUpMessage({ text: followUpInputText });
+    sendFollowUpMessage({ role: 'user', content: followUpInputText });
     setFollowUpInputText('');
   };
 
