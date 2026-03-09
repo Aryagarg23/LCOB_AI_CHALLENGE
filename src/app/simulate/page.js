@@ -320,7 +320,7 @@ export default function SimulatePage() {
     try {
       const nameStr = parsedInputs?.businessName || parsedInputs?.businessType || 'business';
       const safeName = nameStr.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-      const smartFilename = `${safeName}_strategy_report_${Date.now()}.md`;
+      const smartFilename = `${safeName}_strategy_report.md`;
 
       const resp = await fetch('/api/artifacts', {
         method: 'POST',

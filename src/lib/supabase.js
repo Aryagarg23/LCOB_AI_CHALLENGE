@@ -18,7 +18,7 @@ export async function uploadArtifact(content, filename) {
       .from('artifacts')
       .upload(filename, content, {
         contentType: 'text/markdown',
-        upsert: false,
+        upsert: true,
       });
 
     if (error) throw error;
