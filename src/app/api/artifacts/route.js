@@ -1,5 +1,7 @@
 import { uploadArtifact, listArtifacts } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req) {
   try {
     const { content, filename } = await req.json();
