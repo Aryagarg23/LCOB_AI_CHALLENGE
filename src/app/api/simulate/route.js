@@ -30,18 +30,18 @@ export async function POST(req) {
         try {
           const agentResults = {};
           const AGENT_LABELS = {
-            agent1: 'Brand & Visual Identity',
-            agent2: 'Local Demographics',
+            agent1: 'Visual Identity Analysis',
+            agent2: 'Demographic Profiling',
             agent3: 'Internal Data Analysis',
-            agent4: 'Social Sentiment',
-            agent5: 'Macroeconomic Indicators',
-            agent6: 'Supply Chain Costs',
-            agent7: 'Location & Mobility',
-            agent8: 'Competitive Landscape',
-            agent10: 'Real Estate & Rent',
-            agent11: 'Demand Validation',
-            agent12: 'Legal & Regulatory',
-            agent13: 'Financial Engineering (Math)',
+            agent4: 'Social Sentiment Aggregation',
+            agent5: 'Macroeconomic Tracking',
+            agent6: 'Supply Chain Cost Analysis',
+            agent7: 'Spatial & Mobility Analysis',
+            agent8: 'Competitive Intelligence',
+            agent10: 'Real Estate Cost Estimation',
+            agent11: 'Market Demand Validation',
+            agent12: 'Regulatory Compliance Mapping',
+            agent13: 'Financial Modeling',
           };
 
           // Helper: run an agent, handle clarification
