@@ -24,8 +24,9 @@ const getMessageText = (msg) => {
 };
 
 // Markdown renderer with GFM tables support
+const mdPlugins = [remarkGfm];
 const Md = ({ children }) => (
-  <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
+  <ReactMarkdown remarkPlugins={mdPlugins}>{children}</ReactMarkdown>
 );
 
 export default function SimulatePage() {
@@ -81,14 +82,16 @@ export default function SimulatePage() {
 
   // Watch for [READY_TO_ANALYZE] — auto-transition
   useEffect(() => {
+    if (interviewReady) return; // Prevent multiple triggers if already ready
+    
     const lastMsg = interviewMessages[interviewMessages.length - 1];
-    if (lastMsg?.role === 'assistant' && getMessageText(lastMsg).includes('[READY_TO_ANALYZE]') && !interviewReady) {
+    if (lastMsg?.role === 'assistant' && getMessageText(lastMsg).includes('[READY_TO_ANALYZE]')) {
       setInterviewReady(true);
       setTimeout(() => {
         handleLaunchAnalysis();
       }, 1500);
     }
-  }, [interviewMessages]);
+  }, [interviewMessages, interviewReady]); // Added interviewReady to dependencies
 
   // Post-report follow-up chat — custom transport reads resultRef at send time
   const resultRef = useRef(result);
@@ -135,7 +138,10 @@ export default function SimulatePage() {
           pairs.push({ question: getMessageText(followUpMessages[i]), answer: getMessageText(followUpMessages[i + 1]) });
         }
       }
-      setQaHistory(pairs);
+      setQaHistory(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(pairs)) return prev;
+        return pairs;
+      });
     }
   }, [followUpMessages]);
 
@@ -524,6 +530,13 @@ export default function SimulatePage() {
                   <div style={{ textAlign: 'center', padding: '2rem' }}>
                     <div className="spinner"></div>
                     <p style={{ marginTop: '0.75rem', fontSize: '0.9rem' }}>Parsing interview & initializing agents...</p>
+                  </div>
+                )}
+                {Object.keys(agentStates).length > 0 && Object.values(agentStates).every(a => a.status === 'done') && step === STEPS.ANALYZING && (
+                  <div style={{ textAlign: 'center', padding: '1.5rem', marginTop: '1rem', background: 'rgba(20,184,166,0.05)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(20,184,166,0.2)' }}>
+                    <div className="spinner" style={{ width: '20px', height: '20px', borderTopColor: 'var(--accent-teal)' }}></div>
+                    <p style={{ marginTop: '0.75rem', fontSize: '0.95rem', color: 'var(--accent-teal)', fontWeight: 600 }}>Agents Complete. Synthesizing Final Report...</p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '0.25rem' }}>The Orchestrator is validating data and generating your strategy.</p>
                   </div>
                 )}
               </div>
