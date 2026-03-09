@@ -3,11 +3,11 @@ import { getAgentModel } from '@/lib/ai-provider';
 import { webSearchTool } from '@/lib/tools';
 import { z } from 'zod';
 
-export async function agent8_CompetitorAI(zipcode, productType, businessType, businessAgeMonths = undefined, userAnswer = null) {
+export async function agent8_CompetitorAI(zipcode, productType, businessType, businessName = '', isExistingBusiness = true, userAnswer = null) {
   console.log(`[Competitors] Mapping competitive landscape for ${businessType} in ${zipcode}...`);
 
   try {
-    const isPreLaunch = businessAgeMonths !== undefined && Number(businessAgeMonths) <= 0;
+    const isPreLaunch = !isExistingBusiness;
     const { object } = await generateObject({
       model: getAgentModel('gpt-4.1-nano'),
       tools: { webSearch: webSearchTool },
@@ -34,20 +34,20 @@ export async function agent8_CompetitorAI(zipcode, productType, businessType, bu
 CRITICAL ACCURACY RULES:
 1. ONLY report competitors you ACTUALLY find via web search with real URLs. Do NOT invent business names.
 2. If you search and find no specific competitors, say "No specific local competitors found via web search"
-3. Since this might be an established business, DO NOT list the client's own business as a competitor. Look for *other* businesses doing the same thing.
+3. The client's business is called "${businessName}" — DO NOT list it as a competitor. Find DIFFERENT businesses selling similar products nearby.
 4. For each competitor you DO find, include the URL where you found them
 5. If this is a commodity business (farming, mining, etc.), note that competition is price-based at commodity exchanges, not local retail
 6. Report WHOLESALE/COMMODITY prices, not retail prices, for commodity businesses
 
 Search at least 3 times:
 1. "${businessType} near ${zipcode}"
-2. "Competitors to ${productType} businesses in ${zipcode}"
-3. "Similar businesses to ${businessType} in ${zipcode}"
+2. "best ${productType} shops near University of Cincinnati" or "best ${productType} near ${zipcode}"
+3. "${productType} shops ${zipcode} reviews"
 
 If you cannot find real competitors with real URLs, report an empty competitors array and explain in reasoning that data was not available — this is ALWAYS better than fabricating businesses.
 
-ZIP: "${zipcode}", Business: "${businessType}", Product: "${productType}"
-${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. Focus on the market they are ABOUT to enter.' : 'Context: THIS IS AN ESTABLISHED BUSINESS. Find their actual competition.'}
+ZIP: "${zipcode}", Business: "${businessType}", Product: "${productType}", Client Name: "${businessName}"
+${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. Focus on the market they are ABOUT to enter.' : `Context: THIS IS AN EXISTING BUSINESS called "${businessName}". Find their actual local competition — other ${businessType} businesses nearby that are NOT "${businessName}".`}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`,
     });
     return object;

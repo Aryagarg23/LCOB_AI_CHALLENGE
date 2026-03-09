@@ -3,11 +3,11 @@ import { getAgentModel } from '@/lib/ai-provider';
 import { webSearchTool } from '@/lib/tools';
 import { z } from 'zod';
 
-export async function agent1_Vision(inputAesthetic, imageUrl, businessAgeMonths = undefined, userAnswer = null) {
+export async function agent1_Vision(inputAesthetic, imageUrl, isExistingBusiness = true, userAnswer = null) {
   console.log('[Vision] Analyzing brand aesthetic profile...');
 
   try {
-    const isPreLaunch = businessAgeMonths !== undefined && Number(businessAgeMonths) <= 0;
+    const isPreLaunch = !isExistingBusiness;
     const basePrompt = `You are a brand aesthetics and visual identity analyst. Evaluate the business description below and assign a Hedonic Premium Score — a measure of how strongly the brand's look and feel justifies premium pricing.
 
 Use web_search to research comparable businesses in this category and how design/presentation quality correlates with willingness-to-pay.
@@ -15,7 +15,7 @@ Use web_search to research comparable businesses in this category and how design
 Cite all URLs found in your sources array. Explain step-by-step reasoning.
 
 Business Aesthetic Description: "${inputAesthetic}"
-${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. It does not exist yet. Keep your analysis focused on the proposed vision.' : ''}
+${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. It does not exist yet. Keep your analysis focused on the proposed vision.' : 'Context: THIS IS AN EXISTING, ESTABLISHED BUSINESS. Analyze their current brand and visual identity.'}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`;
 
     let requestBody = {

@@ -24,13 +24,13 @@ const executeNodeScript = tool({
   }
 });
 
-export async function agent3_SalesHistorian(businessAgeMonths, productType, businessType, userAnswer = null) {
+export async function agent3_SalesHistorian(businessAgeMonths, productType, businessType, isExistingBusiness = true, userAnswer = null) {
   console.log(`[Sales Data] Processing internal business data...`);
 
   let dataDir = path.join(process.cwd(), 'public', 'data').replace(/\\/g, '/');
 
   try {
-    const isPreLaunch = businessAgeMonths !== undefined && Number(businessAgeMonths) <= 0;
+    const isPreLaunch = !isExistingBusiness;
     const { object } = await generateObject({
       model: getAgentModel('gpt-4.1-nano'),
       tools: { webSearch: webSearchTool, runAnalysis: executeNodeScript },

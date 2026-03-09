@@ -3,11 +3,11 @@ import { getAgentModel } from '@/lib/ai-provider';
 import { webSearchTool } from '@/lib/tools';
 import { z } from 'zod';
 
-export async function agent4_Sentiment(brandName, recentReviews, businessAgeMonths = undefined, userAnswer = null) {
+export async function agent4_Sentiment(brandName, recentReviews, isExistingBusiness = true, userAnswer = null) {
   console.log(`[Sentiment] Scanning reviews for "${brandName}"...`);
 
   try {
-    const isPreLaunch = businessAgeMonths !== undefined && Number(businessAgeMonths) <= 0;
+    const isPreLaunch = !isExistingBusiness;
     const { object } = await generateObject({
       model: getAgentModel('gpt-4.1-nano'),
       tools: { webSearch: webSearchTool },

@@ -78,7 +78,7 @@ export async function POST(req) {
           // BATCH 1: Vision + Demographics + Macro (independent, no business-specific data needed)
           send({ type: 'progress', step: 1, total: 4, label: 'Launching research batch 1: Brand Analysis, Demographics, Macroeconomic Scan...' });
           await Promise.all([
-            runAgent('agent1', agent1_Vision, [inputs.aesthetic || '', inputs.imageUrls?.[0] || null, inputs.businessAgeMonths]),
+            runAgent('agent1', agent1_Vision, [inputs.aesthetic || '', inputs.imageUrls?.[0] || null, inputs.isExistingBusiness]),
             runAgent('agent2', agent2_Demographics, [inputs.zipcode || '']),
             runAgent('agent5', agent5_MacroFed, []),
           ]);
@@ -86,16 +86,16 @@ export async function POST(req) {
           // BATCH 2: Sales + Sentiment + Mobility (may use Batch 1 context)
           send({ type: 'progress', step: 2, total: 4, label: 'Launching batch 2: Sales Data, Sentiment Analysis, Location Assessment...' });
           await Promise.all([
-            runAgent('agent3', agent3_SalesHistorian, [Number(inputs.businessAgeMonths) || 0, inputs.productType || '', inputs.businessType || '']),
-            runAgent('agent4', agent4_Sentiment, [inputs.businessName || '', inputs.recentReviews || '', inputs.businessAgeMonths]),
+            runAgent('agent3', agent3_SalesHistorian, [Number(inputs.businessAgeMonths) || 0, inputs.productType || '', inputs.businessType || '', inputs.isExistingBusiness]),
+            runAgent('agent4', agent4_Sentiment, [inputs.businessName || '', inputs.recentReviews || '', inputs.isExistingBusiness]),
             runAgent('agent7', agent7_UrbanMobility, [inputs.address || '', inputs.zipcode || '']),
           ]);
 
           // BATCH 3: Commodities + Competitors (market-facing, benefit from all context)
           send({ type: 'progress', step: 3, total: 4, label: 'Launching batch 3: Supply Chain Costs, Competitive Intelligence...' });
           await Promise.all([
-            runAgent('agent6', agent6_Commodities, [inputs.productType || '', inputs.businessType || '', inputs.businessAgeMonths]),
-            runAgent('agent8', agent8_CompetitorAI, [inputs.zipcode || '', inputs.productType || '', inputs.businessType || '', inputs.businessAgeMonths]),
+            runAgent('agent6', agent6_Commodities, [inputs.productType || '', inputs.businessType || '', inputs.isExistingBusiness]),
+            runAgent('agent8', agent8_CompetitorAI, [inputs.zipcode || '', inputs.productType || '', inputs.businessType || '', inputs.businessName || '', inputs.isExistingBusiness]),
           ]);
 
           // BATCH 4: Orchestrator synthesizes everything

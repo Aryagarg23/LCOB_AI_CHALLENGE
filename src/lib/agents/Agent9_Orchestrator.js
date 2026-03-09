@@ -13,6 +13,7 @@ export async function agent9_Orchestrator(inputs, agentData) {
   - Address: ${inputs.address}
   - Brand Positioning: ${inputs.aesthetic}
   - Primary Product/Service: ${inputs.productType}
+  - Is Existing Business: ${inputs.isExistingBusiness ? 'YES — this is an established, operating business' : 'NO — this is a pre-launch / planned business'}
   - Business Age: ${inputs.businessAgeMonths} months
   - Core Question: ${inputs.coreQuestion || 'Optimal pricing and go-to-market strategy'}
   - Known Competitors: ${inputs.knownCompetitors || 'None mentioned'}
