@@ -18,7 +18,7 @@ export async function POST(req) {
         address: z.string(),
         aesthetic: z.string().describe('Brand aesthetic, positioning, and target customer description'),
         productType: z.string().describe('Primary product or service'),
-        businessAgeMonths: z.number(),
+        businessAgeMonths: z.number().describe('Age of the business in months. If pre-launch, use 0. If it is an established business but the exact age is unknown, estimate based on context (e.g. 60 for an older business, 12 for newer). Do not use 0 for established businesses.'),
         recentReviews: z.string().describe('Any customer feedback, reviews, or social media mentions from the conversation'),
         coreQuestion: z.string().describe('The specific question or decision the owner needs help with'),
         knownCompetitors: z.string().describe('Any competitors mentioned by name during the interview'),
