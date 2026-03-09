@@ -16,6 +16,7 @@ The system relies on a swarm of highly specialized AI agents that execute in par
 2. **Parallel Multi-Agent Architecture:** Research is distributed across 8 specialized domain agents (Demographics, Macroeconomics, Commodities, Competitors, etc.) that execute in optimized parallel batches, reducing a 5-minute research task to under 60 seconds.
 3. **The Mid-Research Clarification Loop:** Agents are not black boxes. If an agent discovers ambiguous data or needs more specific context (e.g., discovering the market is saturated and asking how the user plans to differentiate), it halts its execution and asks the user a question via Server-Sent Events (SSE) while the other agents continue. Once answered, the agent resumes with the new context.
 4. **Economic Validation & Anti-Hallucination Guardrails:** The final Orchestrator acts as a senior partner. It validates all agent findings for spatial mismatches, fabrications, and pricing math errors before generating a brutally honest viability report.
+5. **Democratizing Business Intelligence (Public Artifacts):** In true alignment with the challenge theme, generated strategy reports are hosted as public artifacts on the platform. This brings elite, institutional-grade economic insights to the broader community at near-zero cost, democratizing access to high-powered agents and drastically reducing the barrier to entry for small business setup.
 
 ---
 
