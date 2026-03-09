@@ -192,7 +192,7 @@ export default function ReportsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const resp = await fetch('/api/artifacts');
+        const resp = await fetch('/api/artifacts', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
         const data = await resp.json();
         if (!data.success) throw new Error(data.error);
         setArtifacts(data.data || []);
