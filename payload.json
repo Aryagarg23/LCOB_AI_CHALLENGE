@@ -1,0 +1,1 @@
+{"model":"gpt-4o-mini","input":[{"role":"user","content":[{"type":"input_text","text":"Search for the weather in Tokyo using the webSearch tool. Just do it."}]}],"tools":[{"type":"function","name":"webSearch","description":"A test tool.","parameters":{"properties":{},"additionalProperties":false}}],"tool_choice":"auto"}
