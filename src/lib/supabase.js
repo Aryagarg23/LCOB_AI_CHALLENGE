@@ -79,7 +79,7 @@ export async function listArtifacts() {
     
     // Fetch public URLs mapping
     const artifactsWithUrls = data
-      .filter(file => file.name !== '.emptyFolderPlaceholder')
+      .filter(file => file.name.endsWith('.md'))
       .map(file => {
         const { data: publicUrlData } = supabase.storage
           .from('artifacts')

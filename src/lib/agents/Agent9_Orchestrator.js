@@ -112,7 +112,7 @@ Generate a comprehensive Markdown report (minimum 2000 words). Use markdown tabl
 
 REQUIRED STRUCTURE:
 
-# Comprehensive Strategy Report: ${inputs.businessName}
+# [Generate a catchy, specific, and professional title for this report — e.g., "Vintage Clothing in Brooklyn: Market Saturation & Pricing Strategy" or "High-End Coffee in Austin: Margin Analysis & Supply Reality"]
 
 ## Executive Summary
 4-5 paragraphs: key findings, recommended pricing, strategic verdict, market viability. Be HONEST about risks and viability — do not sugarcoat a bad idea.

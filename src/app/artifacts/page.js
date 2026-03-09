@@ -103,7 +103,36 @@ function ReportViewer({ file, onClose }) {
 }
 
 function ArtifactCard({ file, onOpen }) {
-  const displayName = file.name.replace('.md', '').replace(/_/g, ' ');
+  const defaultName = file.name.replace('.md', '').replace(/_[0-9]+$/, '').replace(/_/g, ' ');
+  const [title, setTitle] = useState(defaultName);
+  const [summary, setSummary] = useState('Comprehensive business analysis with pricing strategy, competitive landscape, and actionable recommendations.');
+  
+  useEffect(() => {
+    async function loadMeta() {
+      try {
+        const resp = await fetch(file.publicUrl);
+        const text = await resp.text();
+        
+        // 1. Extract the actual smart title from the H1
+        const h1Match = text.match(/^#\s+(.+)$/m);
+        if (h1Match) setTitle(h1Match[1].replace(/[*_]/g, '')); // remove bolding
+
+        // 2. Extract a high-level summary from the Executive Summary
+        const execMatch = text.match(/##\s+Executive Summary\s*\n+([^#]+)/i);
+        if (execMatch) {
+          // Get the first meaty paragraph
+          const paragraphs = execMatch[1].split('\n').map(p => p.trim()).filter(p => p.length > 20);
+          if (paragraphs.length > 0) {
+            let desc = paragraphs[0].replace(/[*_]/g, ''); // strip markdown bold syntax
+            if (desc.length > 140) desc = desc.substring(0, 137) + '...';
+            setSummary(desc);
+          }
+        }
+      } catch (err) {}
+    }
+    loadMeta();
+  }, [file.publicUrl]);
+
   const dateStr = new Date(file.created_at).toLocaleDateString('en-US', {
     year: 'numeric', month: 'short', day: 'numeric',
   });
@@ -117,14 +146,15 @@ function ArtifactCard({ file, onOpen }) {
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       borderLeft: '3px solid var(--accent-cyan)',
+      display: 'flex', flexDirection: 'column'
     }}
       onClick={() => onOpen(file)}
       onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
       onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-        <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--accent-cyan)', textTransform: 'capitalize' }}>
-          {displayName}
+        <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--accent-cyan)', lineHeight: 1.3, paddingRight: '0.5rem' }}>
+          {title}
         </h3>
         <span style={{
           fontSize: '0.75rem', padding: '0.2rem 0.6rem',
@@ -133,16 +163,17 @@ function ArtifactCard({ file, onOpen }) {
           color: 'var(--accent-teal)',
           border: '1px solid rgba(20,184,166,0.3)',
           whiteSpace: 'nowrap',
+          marginTop: '0.1rem'
         }}>
           Strategy Report
         </span>
       </div>
-      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-        Comprehensive business analysis with pricing strategy, competitive landscape, and actionable recommendations.
+      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.5, flex: 1 }}>
+        {summary}
       </p>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-          📅 {dateStr} at {timeStr}
+          📅 {dateStr}
         </span>
         <span style={{ fontSize: '0.85rem', color: 'var(--accent-blue)', fontWeight: 500 }}>
           Read Report →
