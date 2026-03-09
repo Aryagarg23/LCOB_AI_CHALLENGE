@@ -3,14 +3,15 @@ import { getAgentModel } from '@/lib/ai-provider';
 import { webSearchTool } from '@/lib/tools';
 import { z } from 'zod';
 
-export async function agent4_Sentiment(brandName, recentReviews, isExistingBusiness = true, userAnswer = null) {
-  console.log(`[Sentiment] Scanning reviews for "${brandName}"...`);
+export async function agent4_Sentiment(inputs, userAnswer = null) {
+  const { businessName, recentReviews, isExistingBusiness } = inputs;
+  console.log(`[Sentiment] Scanning reviews for "${businessName}"...`);
 
   try {
     const isPreLaunch = !isExistingBusiness;
     const { object } = await generateObject({
       model: getAgentModel('gpt-4.1-nano'),
-      tools: { webSearch: webSearchTool },
+      tools: { web_search: webSearchTool },
       maxSteps: 5,
       schema: z.object({
         name: z.string(),
@@ -24,11 +25,11 @@ export async function agent4_Sentiment(brandName, recentReviews, isExistingBusin
         sources: z.array(z.string()).describe('URLs of review pages, social media, articles'),
         clarificationQuestion: z.string().nullable().describe(isPreLaunch ? 'Since this is a PRE-LAUNCH business, do NOT ask about past customer feedback. Ask an open-ended question about how they want their future customers to feel. Otherwise null.' : 'If you cannot find this specific established business online, ask the user what platforms their customers review them on. Otherwise null.'),
       }),
-      prompt: `You are a social sentiment analyst. Quantify public perception of "${brandName}" using web data and any user-provided reviews.
+      prompt: `You are a social sentiment analyst. Quantify public perception of "${businessName}" using web data and any user-provided reviews.
 
 Search at least twice:
-1. "${brandName} reviews"
-2. "${brandName} social media perception"
+1. "${businessName} reviews"
+2. "${businessName} social media perception"
 
 ${isPreLaunch 
   ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS with no existing reviews. Search for sentiment about similar concepts.' 
@@ -36,6 +37,7 @@ ${isPreLaunch
 Cite every URL. Quote specific review snippets in reasoning.
 
 User-Provided Reviews: "${recentReviews || 'None provided'}"
+CONTEXT: ${JSON.stringify(inputs)}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`,
     });
     return object;

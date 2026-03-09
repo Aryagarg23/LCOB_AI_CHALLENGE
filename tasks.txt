@@ -1,0 +1,22 @@
+## Error Type
+Console Error
+
+## Error Message
+Invalid schema for function 'web_search': schema must be a JSON Schema of 'type: "object"', got 'type: "None"'.
+
+
+    at new Promise (<anonymous>:null:null)
+
+Next.js version: 16.1.6 (Turbopack)
+
+
+## Error Type
+Console Error
+
+## Error Message
+Invalid schema for function '0': schema must be a JSON Schema of 'type: "object"', got 'type: "None"'.
+
+
+    at new Promise (<anonymous>:null:null)
+
+Next.js version: 16.1.6 (Turbopack)

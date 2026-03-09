@@ -3,13 +3,14 @@ import { getAgentModel } from '@/lib/ai-provider';
 import { webSearchTool } from '@/lib/tools';
 import { z } from 'zod';
 
-export async function agent2_Demographics(zipcode, userAnswer = null) {
+export async function agent2_Demographics(inputs, userAnswer = null) {
+  const { zipcode } = inputs;
   console.log(`[Demographics] Researching ZIP ${zipcode}...`);
 
   try {
     const { object } = await generateObject({
       model: getAgentModel('gpt-4.1-nano'),
-      tools: { webSearch: webSearchTool },
+      tools: { web_search: webSearchTool },
       maxSteps: 4,
       schema: z.object({
         name: z.string(),
@@ -33,6 +34,7 @@ CRITICAL ACCURACY RULES:
 5. Do NOT return "Data Not provided" — your job is to FIND the data via search
 
 ZIP Code: "${zipcode}"
+CONTEXT: ${JSON.stringify(inputs)}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`,
     });
     return object;

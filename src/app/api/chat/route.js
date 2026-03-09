@@ -1,10 +1,19 @@
 import { streamText, convertToModelMessages } from 'ai';
 import { getAgentModel } from '@/lib/ai-provider';
-import { webSearchTool } from '@/lib/tools';
 
 export async function POST(req) {
   try {
-    const { messages, artifactContext } = await req.json();
+    const body = await req.json();
+    const { messages, artifactContext } = body;
+
+    console.log('[Chat API] Received request:', {
+      messageCount: messages?.length,
+      hasArtifactContext: !!artifactContext,
+      artifactContextLength: artifactContext?.length || 0,
+      firstMsgRole: messages?.[0]?.role,
+      firstMsgParts: messages?.[0]?.parts?.length,
+      bodyKeys: Object.keys(body),
+    });
 
     // Guard against empty messages from hook initialization
     if (!messages || messages.length === 0) {
@@ -13,12 +22,11 @@ export async function POST(req) {
 
     const systemPrompt = `You are a senior business strategy consultant at Praxis Economics. You just generated a comprehensive pricing and strategy report for the user's business.
 
-The user is a non-technical business owner asking follow-up questions about the strategy. You have access to a web_search tool — if the user asks a question requiring fresh data, current prices, new competitor information, or any factual lookup, use the tool to search the web and provide sourced answers.
+The user is a non-technical business owner asking follow-up questions about the strategy.
 
 Always:
 - Be professional yet approachable
 - Cite specific data from the report when relevant
-- If you search the web, include the source URL in your response
 - Translate economic jargon into actionable business advice
 - Format responses with clear structure (bold, bullets) when helpful
 
@@ -29,9 +37,7 @@ ${artifactContext || 'No report context available. Speak generally about pricing
     const modelMessages = await convertToModelMessages(messages);
 
     const result = streamText({
-      model: getAgentModel('gpt-4.1-nano'),
-      tools: { webSearch: webSearchTool },
-      maxSteps: 3,
+      model: getAgentModel('gpt-4o-mini'),
       system: systemPrompt,
       messages: modelMessages,
     });

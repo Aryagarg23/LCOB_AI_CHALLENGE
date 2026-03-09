@@ -3,44 +3,62 @@ import { getAgentModel } from '@/lib/ai-provider';
 import { webSearchTool } from '@/lib/tools';
 import { z } from 'zod';
 
-export async function agent6_Commodities(productType, businessType, isExistingBusiness = true, userAnswer = null) {
+export async function agent6_Commodities(inputs, userAnswer = null) {
+  const { productType, businessType, isExistingBusiness } = inputs;
   console.log(`[Commodities] Tracking supply chain costs for ${businessType || productType}...`);
 
   try {
     const isPreLaunch = !isExistingBusiness;
     const { object } = await generateObject({
       model: getAgentModel('gpt-4.1-nano'),
-      tools: { webSearch: webSearchTool },
-      maxSteps: 4,
+      tools: { web_search: webSearchTool },
+      maxSteps: 6,
       schema: z.object({
         name: z.string(),
-        marginalCostFloor: z.number().describe('Estimated per-unit Marginal Cost (USD) to produce/deliver the primary product'),
+        marginalCostFloor: z.number().describe('Estimated per-unit Marginal Cost (USD) to produce/deliver the primary product — this is the TRUE all-in cost per SELLABLE unit'),
         costBreakdown: z.array(z.object({
           component: z.string(),
           cost: z.number(),
           note: z.string(),
         })).describe('Itemized cost components with real numbers'),
+        yieldRate: z.number().min(0).max(1).describe('For resale: % of inventory that is actually sellable (e.g., 0.40 means only 40% of items from a bale are sellable). For non-resale: 1.0'),
+        laborHoursPerUnit: z.number().describe('Estimated labor hours per unit for sorting, cleaning, repair, prep, etc.'),
+        laborCostPerUnit: z.number().describe('Labor cost per unit based on local minimum wage × labor hours'),
+        trueAcquisitionCostPerSellableUnit: z.number().describe('Raw cost / yield rate = true cost per sellable unit. For example: $5 per item but only 40% sellable = $12.50 true cost'),
+        industryTypicalMarkup: z.string().describe('What markup does this industry typically use? e.g., "Thrift stores: 3-4x cost", "Restaurants: 3x food cost", "Retail: 2-2.5x wholesale"'),
         trend: z.string().describe('Current commodity/supply cost trend'),
         impact: z.string().describe('How this sets the absolute minimum viable price'),
-        reasoning: z.string().describe('Detailed per-unit cost derivation citing specific prices found via search'),
+        reasoning: z.string().describe('Detailed per-unit cost derivation citing specific prices found via search. Show ALL math.'),
         sources: z.array(z.string()).describe('URLs from commodity trackers, USDA, suppliers, industry sites'),
         clarificationQuestion: z.string().nullable().describe(isPreLaunch ? 'If raw material types are unknown, ask what specific materials they PLAN to use for this new business. Otherwise null.' : 'If raw material costs are unknown for this product, ask. Otherwise null.'),
       }),
-      prompt: `You are a supply chain cost analyst. Estimate the REAL per-unit Marginal Cost to produce "${productType}" for a ${businessType || 'retail'} business.
+      prompt: `You are a supply chain and unit economics analyst. Estimate the REAL per-unit Marginal Cost (COGS) to sell "${productType}" for a "${businessType}" business.
 
 CRITICAL ACCURACY RULES:
-1. Search for ACTUAL wholesale/commodity prices — NOT retail prices. For agriculture, search USDA crop budgets, extension service data, or commodity market prices.
-2. For cotton: raw cotton lint trades at ~$0.60-0.85/lb on commodity markets. Cotton farming costs are typically $300-600/acre. Do NOT confuse retail fabric prices with raw commodity prices.
-3. For food businesses: search for wholesale ingredient costs, NOT menu prices.
-4. For manufacturing: search for raw material costs, NOT finished product prices.
-5. Break down ALL major cost components: raw materials, labor, energy, transport, packaging.
-6. If you can't find exact prices, state that clearly in your reasoning rather than making up numbers.
+1. Search for ACTUAL wholesale or raw material costs — NOT retail prices.
+2. USE PRECISE CONSUMPTION UNITS (e.g., for Coffee: calculate grams of beans per 12oz cup, usually 15-20g, NOT the weight of the final liquid).
+3. Adapt calculations based on the business category ("${businessType}"):
+   - FOR FOOD/BEV: Research wholesale ingredient costs. **CRITICAL: Include ALL marginal components: raw materials, packaging (cups/lids), and direct additives (milk/syrups).**
+   - FOR RESALE (Used/Vintage): Research bulk lot/bale costs. Calculate YIELD RATE (% sellable). TRUE COST = Acquisition ÷ Yield.
+   - FOR RETAIL (New): Research wholesale/distributor prices for "${productType}".
+   - TARIFF IMPACT: If ingredients/products are imported, explain HOW tariffs increase wholesale costs.
+   - FOR SERVICES: Research hourly labor rates + consumables used per appointment.
+4. **Break down ALL cost components: materials, labor (regional min wage + 20% overhead), energy, transport, and packaging.**
+4. Calculate INDUSTRY TYPICAL MARKUP for "${businessType}" (e.g., 2x, 3x, 5x).
 
-Search at least twice:
-1. "wholesale cost ${productType} 2024" or "USDA ${productType} production costs" or "${productType} commodity price"
-2. "${businessType} cost per unit" or "${productType} manufacturing costs"
+SEARCH STRATEGY:
+1. "wholesale cost of ${productType} 2024 2025" or "bulk ${productType} supplier prices"
+2. "${businessType} cost of goods sold benchmarks" or "${businessType} typical gross margins"
+3. "industry standard markup for ${businessType}" or "how to price ${productType}"
 
-Business Type: "${businessType}", Product: "${productType}"
+YIELD & MARKUP REALITY CHECK:
+- Resale/Thrift: Typically 40-60% yield; 3-5x markup.
+- Restaurant: Typically 3x food cost.
+- New Retail: Typically 2-2.5x wholesale.
+- Services: Typically 3-5x labor cost + materials.
+
+Business Category: "${businessType}", Product: "${productType}"
+CONTEXT: ${JSON.stringify(inputs)}
 ${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. Focus on estimating setup and projected operational costs.' : ''}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`,
     });

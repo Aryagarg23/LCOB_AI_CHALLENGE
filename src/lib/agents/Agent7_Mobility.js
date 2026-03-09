@@ -3,13 +3,14 @@ import { getAgentModel } from '@/lib/ai-provider';
 import { webSearchTool } from '@/lib/tools';
 import { z } from 'zod';
 
-export async function agent7_UrbanMobility(address, zipcode, userAnswer = null) {
+export async function agent7_UrbanMobility(inputs, userAnswer = null) {
+  const { address, zipcode } = inputs;
   console.log(`[Mobility] Assessing location accessibility around ${address || zipcode}...`);
 
   try {
     const { object } = await generateObject({
       model: getAgentModel('gpt-4.1-nano'),
-      tools: { webSearch: webSearchTool },
+      tools: { web_search: webSearchTool },
       maxSteps: 3,
       schema: z.object({
         name: z.string(),
@@ -27,6 +28,7 @@ export async function agent7_UrbanMobility(address, zipcode, userAnswer = null) 
 Search for "walk score ${zipcode}", "${address || zipcode} walkability", or "transit near ${zipcode}". Identify nearby anchors (universities, offices, factories, shopping centers, transit stations) that drive traffic. Cite sources.
 
 Address: "${address}", ZIP: "${zipcode}"
+CONTEXT: ${JSON.stringify(inputs)}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`,
     });
     return object;

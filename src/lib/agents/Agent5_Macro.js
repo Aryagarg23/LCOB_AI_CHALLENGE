@@ -3,13 +3,13 @@ import { getAgentModel } from '@/lib/ai-provider';
 import { webSearchTool } from '@/lib/tools';
 import { z } from 'zod';
 
-export async function agent5_MacroFed(userAnswer = null) {
+export async function agent5_MacroFed(inputs, userAnswer = null) {
   console.log(`[Macro] Researching macroeconomic indicators...`);
 
   try {
     const { object } = await generateObject({
       model: getAgentModel('gpt-4.1-nano'),
-      tools: { webSearch: webSearchTool },
+      tools: { web_search: webSearchTool },
       maxSteps: 3,
       schema: z.object({
         name: z.string(),
@@ -25,6 +25,7 @@ export async function agent5_MacroFed(userAnswer = null) {
       prompt: `You are a macroeconomics analyst. Find the CURRENT US inflation rate, Federal Funds rate, and consumer spending outlook.
 
 Search for "current US inflation rate 2026" and "federal funds rate today". Find real numbers, not estimates. Cite sources.
+CONTEXT: ${JSON.stringify(inputs)}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`,
     });
     return object;

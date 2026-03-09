@@ -7,6 +7,10 @@ import { agent6_Commodities } from '@/lib/agents/Agent6_Commodities';
 import { agent7_UrbanMobility } from '@/lib/agents/Agent7_Mobility';
 import { agent8_CompetitorAI } from '@/lib/agents/Agent8_Competitor';
 import { agent9_Orchestrator } from '@/lib/agents/Agent9_Orchestrator';
+import { agent10_RealEstate } from '@/lib/agents/Agent10_RealEstate';
+import { agent11_DemandValidation } from '@/lib/agents/Agent11_DemandValidation';
+import { agent12_Legal } from '@/lib/agents/Agent12_Legal';
+import { agent13_Math } from '@/lib/agents/Agent13_Math';
 
 import { pendingAnswers } from '@/lib/pendingAnswers';
 
@@ -34,6 +38,10 @@ export async function POST(req) {
             agent6: 'Supply Chain Costs',
             agent7: 'Location & Mobility',
             agent8: 'Competitive Landscape',
+            agent10: 'Real Estate & Rent',
+            agent11: 'Demand Validation',
+            agent12: 'Legal & Regulatory',
+            agent13: 'Financial Engineering (Math)',
           };
 
           // Helper: run an agent, handle clarification
@@ -75,32 +83,44 @@ export async function POST(req) {
             }
           };
 
-          // BATCH 1: Vision + Demographics + Macro (independent, no business-specific data needed)
-          send({ type: 'progress', step: 1, total: 4, label: 'Launching research batch 1: Brand Analysis, Demographics, Macroeconomic Scan...' });
+          // BATCH 1: Vision + Demographics + Macro + Real Estate + Legal (independent)
+          send({ type: 'progress', step: 1, total: 5, label: 'Launching research batch 1: Brand, Demographics, Macro, Real Estate, Legal...' });
           await Promise.all([
-            runAgent('agent1', agent1_Vision, [inputs.aesthetic || '', inputs.imageUrls?.[0] || null, inputs.isExistingBusiness]),
-            runAgent('agent2', agent2_Demographics, [inputs.zipcode || '']),
-            runAgent('agent5', agent5_MacroFed, []),
+            runAgent('agent1', agent1_Vision, [inputs, inputs.imageUrls?.[0] || null]),
+            runAgent('agent2', agent2_Demographics, [inputs]),
+            runAgent('agent5', agent5_MacroFed, [inputs]),
+            runAgent('agent10', agent10_RealEstate, [inputs]),
+            runAgent('agent12', agent12_Legal, [inputs]),
           ]);
 
-          // BATCH 2: Sales + Sentiment + Mobility (may use Batch 1 context)
-          send({ type: 'progress', step: 2, total: 4, label: 'Launching batch 2: Sales Data, Sentiment Analysis, Location Assessment...' });
+          // BATCH 2: Sales + Sentiment + Mobility + Demand Validation
+          send({ type: 'progress', step: 2, total: 5, label: 'Launching batch 2: Sales Data, Sentiment, Location, Demand Validation...' });
           await Promise.all([
-            runAgent('agent3', agent3_SalesHistorian, [Number(inputs.businessAgeMonths) || 0, inputs.productType || '', inputs.businessType || '', inputs.isExistingBusiness]),
-            runAgent('agent4', agent4_Sentiment, [inputs.businessName || '', inputs.recentReviews || '', inputs.isExistingBusiness]),
-            runAgent('agent7', agent7_UrbanMobility, [inputs.address || '', inputs.zipcode || '']),
+            runAgent('agent3', agent3_SalesHistorian, [inputs, inputs.isExistingBusiness]),
+            runAgent('agent4', agent4_Sentiment, [inputs]),
+            runAgent('agent7', agent7_UrbanMobility, [inputs]),
+            runAgent('agent11', agent11_DemandValidation, [inputs]),
           ]);
 
           // BATCH 3: Commodities + Competitors (market-facing, benefit from all context)
-          send({ type: 'progress', step: 3, total: 4, label: 'Launching batch 3: Supply Chain Costs, Competitive Intelligence...' });
+          send({ type: 'progress', step: 3, total: 5, label: 'Launching batch 3: Supply Chain Costs, Competitive Intelligence...' });
           await Promise.all([
-            runAgent('agent6', agent6_Commodities, [inputs.productType || '', inputs.businessType || '', inputs.isExistingBusiness]),
-            runAgent('agent8', agent8_CompetitorAI, [inputs.zipcode || '', inputs.productType || '', inputs.businessType || '', inputs.businessName || '', inputs.isExistingBusiness]),
+            runAgent('agent6', agent6_Commodities, [inputs]),
+            runAgent('agent8', agent8_CompetitorAI, [inputs]),
           ]);
 
-          // BATCH 4: Orchestrator synthesizes everything
-          send({ type: 'progress', step: 4, total: 4, label: 'Synthesizing findings into comprehensive strategy report...' });
-          let finalReport = await agent9_Orchestrator(inputs, agentResults);
+          // BATCH 4: Financial Engineering (Math Agent)
+          send({ type: 'progress', step: 4, total: 5, label: 'Running Quant Analysis: Financial Engineering & Math...' });
+          await runAgent('agent13', agent13_Math, [inputs, agentResults]);
+
+          // BATCH 5: Orchestrator synthesizes everything
+          send({ type: 'progress', step: 5, total: 5, label: 'Running CoT validation and checking data realism...' });
+          
+          send({ type: 'report_start', label: 'Synthesizing all research domains into comprehensive strategy report...' });
+          
+          let finalReport = await agent9_Orchestrator(inputs, agentResults, (chunk) => {
+            send({ type: 'report_chunk', chunk });
+          });
 
           // Prepend uploaded images
           if (inputs.imageUrls?.length > 0) {

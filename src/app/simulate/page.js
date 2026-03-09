@@ -30,7 +30,7 @@ const Md = ({ children }) => (
 
 export default function SimulatePage() {
   const [step, setStep] = useState(STEPS.UPLOAD);
-  
+
   // Upload state
   const [imageFiles, setImageFiles] = useState([]);
   const [imageUrls, setImageUrls] = useState([]);
@@ -42,13 +42,16 @@ export default function SimulatePage() {
   const [parsedInputs, setParsedInputs] = useState(null);
   const [interviewInputText, setInterviewInputText] = useState('');
   const [followUpInputText, setFollowUpInputText] = useState('');
-  const chatEndRef = useRef(null);
+  const interviewChatEndRef = useRef(null);
+  const followUpChatEndRef = useRef(null);
+  const sessionIdRef = useRef(null);
 
   // Analysis state
   const [agentStates, setAgentStates] = useState({});  // { agent1: { status, label, data, question } }
   const [progressBatches, setProgressBatches] = useState([]);
   const [agentQuestions, setAgentQuestions] = useState([]); // [{ agent, label, question }]
   const [result, setResult] = useState(null);
+  const [streamingReport, setStreamingReport] = useState('');
   const [agentData, setAgentData] = useState(null);
   const [error, setError] = useState('');
   const [interviewTranscript, setInterviewTranscript] = useState('');
@@ -70,9 +73,10 @@ export default function SimulatePage() {
     body: { businessContext: getFileContext() },
   }), []);
 
-  const { messages: interviewMessages, sendMessage: sendInterviewMsg, status: interviewStatus } = useChat({
+  const { messages: interviewMessages, sendMessage: sendInterviewMsg, status: interviewStatus, error: interviewError } = useChat({
     id: 'interview-chat',
     transport: interviewTransport,
+    onError: (err) => console.error('[Interview Chat Error]', err),
   });
 
   // Watch for [READY_TO_ANALYZE] — auto-transition
@@ -86,18 +90,24 @@ export default function SimulatePage() {
     }
   }, [interviewMessages]);
 
-  // Post-report follow-up chat — body is a function so it dynamically resolves result
+  // Post-report follow-up chat — custom transport reads resultRef at send time
   const resultRef = useRef(result);
   resultRef.current = result;
 
-  const followUpTransport = useMemo(() => new DefaultChatTransport({
-    api: '/api/chat',
-    body: () => ({ artifactContext: resultRef.current || '' }),
+  const followUpTransport = useMemo(() => ({
+    sendMessages(opts) {
+      const transport = new DefaultChatTransport({
+        api: '/api/chat',
+        body: { artifactContext: resultRef.current || '' },
+      });
+      return transport.sendMessages(opts);
+    },
   }), []);
 
-  const { messages: followUpMessages, sendMessage: sendFollowUpMsg, status: followUpStatus } = useChat({
+  const { messages: followUpMessages, sendMessage: sendFollowUpMsg, status: followUpStatus, error: followUpError } = useChat({
     id: 'followup-chat',
     transport: followUpTransport,
+    onError: (err) => console.error('[Follow-Up Chat Error]', err),
   });
 
   const interviewLoading = interviewStatus === 'streaming' || interviewStatus === 'submitted';
@@ -130,17 +140,22 @@ export default function SimulatePage() {
   }, [followUpMessages]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [interviewMessages, followUpMessages, agentQuestions]);
+    interviewChatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [interviewMessages, agentQuestions]);
+
+  useEffect(() => {
+    followUpChatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [followUpMessages]);
 
   const getFullReport = () => {
-    if (!result) return '';
-    if (qaHistory.length === 0) return result;
+    const reportContent = result || streamingReport;
+    if (!reportContent) return '';
+    if (qaHistory.length === 0) return reportContent;
     let appendix = '\n\n---\n\n## Follow-Up Q&A\n\n';
     qaHistory.forEach((qa, i) => {
       appendix += `### Q${i + 1}: ${qa.question}\n\n${qa.answer}\n\n`;
     });
-    return result + appendix;
+    return reportContent + appendix;
   };
 
   // Step 1: Handle uploads
@@ -165,7 +180,7 @@ export default function SimulatePage() {
           body: formData,
         });
         const uploadData = await resp.json();
-        
+
         if (!uploadData.success) throw new Error(`Upload failed: ${uploadData.error}`);
         urls.push(uploadData.url);
       }
@@ -197,6 +212,7 @@ export default function SimulatePage() {
       if (!parseData.success) throw new Error(parseData.error);
 
       const inputs = { ...parseData.data, imageUrls, sessionId: Date.now().toString() };
+      sessionIdRef.current = inputs.sessionId;
       setParsedInputs(inputs);
 
       // Run parallel analysis via SSE
@@ -240,21 +256,33 @@ export default function SimulatePage() {
                 setAgentQuestions(prev => prev.map(q => q.agent === event.agent ? { ...q, answered: true } : q));
               }
 
+              if (event.type === 'report_start') {
+                setStep(STEPS.RESULTS);
+                setStreamingReport('');
+              }
+
+              if (event.type === 'report_chunk') {
+                setStreamingReport(prev => prev + event.chunk);
+              }
+
               if (event.type === 'complete') {
                 setResult(event.report);
                 setAgentData(event.data);
-                setStep(STEPS.RESULTS);
-                
+                // Fallback in case we skipped report_start
+                if (step !== STEPS.RESULTS) {
+                  setStep(STEPS.RESULTS);
+                }
+
                 // Generate a smart title
                 const nameStr = inputs.businessName || inputs.businessType || 'business';
                 const safeName = nameStr.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-                const smartFilename = `${safeName}_strategy_report.md`;
+                const smartFilename = `${safeName}_strategy_report_${Date.now()}.md`;
 
-                try { await fetch('/api/artifacts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: event.report, filename: smartFilename }) }); } catch (_) {}
+                try { await fetch('/api/artifacts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: event.report, filename: smartFilename }) }); } catch (_) { }
               }
 
               if (event.type === 'error') throw new Error(event.error);
-            } catch (_) {}
+            } catch (_) { }
           }
         }
       }
@@ -264,16 +292,16 @@ export default function SimulatePage() {
   };
 
   const handleAnswerQuestion = async (agentKey, answerText) => {
-    if (!answerText.trim() || !parsedInputs?.sessionId) return;
-    
+    if (!answerText.trim() || !sessionIdRef.current) return;
+
     // Optimistically mark as answered
     setAgentQuestions(prev => prev.map(q => q.agent === agentKey ? { ...q, answered: true, answerText } : q));
-    
+
     try {
       await fetch('/api/simulate/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: parsedInputs.sessionId, agent: agentKey, answer: answerText })
+        body: JSON.stringify({ sessionId: sessionIdRef.current, agent: agentKey, answer: answerText })
       });
     } catch (e) {
       console.error('Failed to send answer', e);
@@ -284,7 +312,7 @@ export default function SimulatePage() {
     try {
       const nameStr = parsedInputs?.businessName || parsedInputs?.businessType || 'business';
       const safeName = nameStr.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-      const smartFilename = `${safeName}_strategy_report.md`;
+      const smartFilename = `${safeName}_strategy_report_${Date.now()}.md`;
 
       const resp = await fetch('/api/artifacts', {
         method: 'POST',
@@ -303,7 +331,7 @@ export default function SimulatePage() {
         <p style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sources</p>
         {sources.filter(s => s).map((src, i) => (
           <a key={i} href={src} target="_blank" rel="noopener noreferrer"
-             style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-dim)', wordBreak: 'break-all', marginBottom: '0.1rem', textDecoration: 'underline' }}>
+            style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-dim)', wordBreak: 'break-all', marginBottom: '0.1rem', textDecoration: 'underline' }}>
             {src.length > 70 ? src.substring(0, 70) + '...' : src}
           </a>
         ))}
@@ -312,7 +340,7 @@ export default function SimulatePage() {
   };
 
   // Agent status indicators
-  const AGENT_ORDER = ['agent1', 'agent2', 'agent5', 'agent3', 'agent4', 'agent7', 'agent6', 'agent8'];
+  const AGENT_ORDER = ['agent1', 'agent2', 'agent5', 'agent3', 'agent4', 'agent7', 'agent6', 'agent8', 'agent10', 'agent11', 'agent12', 'agent13'];
   const getAgentIcon = (status) => {
     if (status === 'running') return '🔄';
     if (status === 'question') return '❓';
@@ -322,7 +350,7 @@ export default function SimulatePage() {
 
   return (
     <div className="container" style={{ maxWidth: step === STEPS.RESULTS ? '1400px' : step === STEPS.ANALYZING ? '1100px' : '900px' }}>
-      
+
       {/* Step indicator */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', justifyContent: 'center' }}>
         {['Upload', 'Interview', 'Analysis', 'Report'].map((label, i) => (
@@ -416,7 +444,7 @@ export default function SimulatePage() {
                   <p style={{ fontSize: '0.9rem', color: 'var(--accent-teal)', fontWeight: 600 }}>✓ Starting comprehensive analysis...</p>
                 </div>
               )}
-              <div ref={chatEndRef}></div>
+              <div ref={interviewChatEndRef}></div>
             </div>
 
             {!interviewReady && (
@@ -448,12 +476,12 @@ export default function SimulatePage() {
                       display: 'flex', alignItems: 'center', gap: '0.75rem',
                       padding: '0.6rem 0.85rem',
                       background: state.status === 'running' ? 'rgba(59,130,246,0.08)' :
-                                  state.status === 'question' ? 'rgba(245,158,11,0.08)' :
-                                  'rgba(20,184,166,0.05)',
+                        state.status === 'question' ? 'rgba(245,158,11,0.08)' :
+                          'rgba(20,184,166,0.05)',
                       borderRadius: 'var(--radius-sm)',
                       borderLeft: `3px solid ${state.status === 'running' ? 'var(--accent-blue)' :
-                                                state.status === 'question' ? '#f59e0b' :
-                                                'var(--accent-teal)'}`,
+                        state.status === 'question' ? '#f59e0b' :
+                          'var(--accent-teal)'}`,
                       animation: 'fadeIn 0.3s ease'
                     }}>
                       {state.status === 'running' ? (
@@ -506,7 +534,7 @@ export default function SimulatePage() {
                     }}>
                       <p style={{ fontSize: '0.75rem', color: q.answered ? 'var(--accent-teal)' : '#f59e0b', fontWeight: 600, marginBottom: '0.3rem', textTransform: 'uppercase' }}>{q.label}</p>
                       <p style={{ fontSize: '0.88rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>{q.question}</p>
-                      
+
                       {q.answered ? (
                         <div style={{ background: 'rgba(20,184,166,0.1)', padding: '0.5rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
                           <span style={{ color: 'var(--accent-teal)', fontWeight: 600 }}>You:</span> {q.answerText || 'Answer submitted'}
@@ -531,7 +559,7 @@ export default function SimulatePage() {
       )}
 
       {/* STEP 4: Results */}
-      {step === STEPS.RESULTS && result && (
+      {step === STEPS.RESULTS && (result || streamingReport) && (
         <div>
           {/* Interview Summary Card */}
           <div className="glass-panel" style={{ marginBottom: '1.25rem', borderColor: 'rgba(59,130,246,0.2)' }}>
@@ -539,7 +567,7 @@ export default function SimulatePage() {
               <div>
                 <h3 style={{ color: 'var(--accent-blue)', margin: 0, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Needfinding Interview</h3>
                 <p style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                  {interviewMessages.filter(m => m.role === 'user').length} exchanges · 
+                  {interviewMessages.filter(m => m.role === 'user').length} exchanges ·
                   {imageUrls.length > 0 && ` ${imageUrls.length} photos uploaded ·`}
                   {businessFiles.length > 0 && ` ${businessFiles.length} files uploaded ·`}
                   {' '}Core question: <em>{parsedInputs?.coreQuestion || 'Pricing strategy'}</em>
@@ -559,20 +587,24 @@ export default function SimulatePage() {
             <h2 style={{ marginBottom: '1rem' }}>Research Summary</h2>
             <div className="grid grid-cols-2" style={{ gap: '0.75rem' }}>
               {[
-                { key: 'agent1', title: 'Brand & Value Perception', render: (d) => (<><p><strong>Classification:</strong> {d?.classification} ({d?.score})</p><p><strong>Impact:</strong> {d?.impact}</p></>)},
-                { key: 'agent2', title: 'Demographics & Income', render: (d) => (<><p><strong>Median Income:</strong> ${d?.medianIncome?.toLocaleString()}</p><p><strong>Price Ceiling:</strong> ${d?.priceCeiling}</p><p><strong>Neighborhood:</strong> {d?.neighborhoodType}</p></>)},
-                { key: 'agent4', title: 'Social Sentiment', render: (d) => (<><p><strong>Sentiment:</strong> {d?.sentimentScore}</p>{d?.rawData?.positiveThemes?.length > 0 && <p><strong>+:</strong> {d.rawData.positiveThemes.join(', ')}</p>}{d?.rawData?.negativeThemes?.length > 0 && <p><strong>−:</strong> {d.rawData.negativeThemes.join(', ')}</p>}</>)},
-                { key: 'agent8', title: 'Competitive Landscape', render: (d) => (<><p><strong>Avg Price:</strong> ${d?.avgCompetitorPrice}</p><p><strong>Strategy:</strong> {d?.strategyMode}</p><p><strong>Saturation:</strong> {d?.marketSaturation}</p>{d?.competitors?.map((c,i)=><p key={i} style={{fontSize:'0.8rem'}}>• <strong>{c.name}</strong> ({c.priceRange})</p>)}</>)},
-                { key: 'agent5', title: 'Macroeconomic Indicators', render: (d) => (<><p><strong>Inflation:</strong> {d?.inflationRate}%</p><p><strong>Fed Rate:</strong> {d?.interestRate}%</p><p><strong>Outlook:</strong> {d?.spendingOutlook}</p></>)},
-                { key: 'agent6', title: 'Supply Chain & Costs', render: (d) => (<><p><strong>MC/Unit:</strong> ${d?.marginalCostFloor}</p><p><strong>Trend:</strong> {d?.trend}</p>{d?.costBreakdown?.map((c,i) => <p key={i} style={{fontSize:'0.8rem'}}>• {c.component}: ${c.cost} — {c.note}</p>)}</>)},
-                { key: 'agent7', title: 'Location & Mobility', render: (d) => (<><p><strong>Transit:</strong> {d?.transitStatus}</p><p><strong>Multiplier:</strong> {d?.footTrafficMultiplier}x</p><p><strong>Nearby:</strong> {d?.nearbyAnchors}</p></>)},
-                { key: 'agent3', title: 'Internal Data & Elasticity', render: (d) => (<><p><strong>PED:</strong> {d?.priceElasticityDemand}</p><p><strong>Overhead:</strong> ${d?.fixedOverheadAssumption?.toLocaleString()}/wk</p><p><strong>Avg Transaction:</strong> ${d?.avgTransactionValue}</p></>)},
+                { key: 'agent1', title: 'Brand & Value Perception', render: (d) => (<><p><strong>Classification:</strong> {d?.classification} ({d?.score})</p><p><strong>Impact:</strong> {d?.impact}</p></>) },
+                { key: 'agent11', title: 'Demand Validation', render: (d) => (<><p><strong>Demand:</strong> {d?.demandLevel}</p><p><strong>Daily Cust:</strong> ≈{d?.estimatedDailyCustomers}</p><p><strong>WTP:</strong> {d?.willingnessToPay}</p></>) },
+                { key: 'agent10', title: 'Real Estate & Rent', render: (d) => (<><p><strong>Rent:</strong> ${d?.estimatedMonthlyRent?.toLocaleString()}</p><p><strong>SqFt:</strong> {d?.assumedSquareFootage} (@${d?.pricePerSqFtAnnual}/yr)</p><p><strong>Total Occupancy:</strong> ${d?.totalMonthlyOccupancyCost?.toLocaleString()}</p></>) },
+                { key: 'agent12', title: 'Legal & Regulatory', render: (d) => (<><p><strong>Legal Risk:</strong> {d?.legalRiskLevel}</p><p><strong>Licenses:</strong> {d?.requiredLicenses?.length}</p><p><strong>Compliance Cost:</strong> ${d?.estimatedComplianceCost?.toLocaleString()}</p></>) },
+                { key: 'agent2', title: 'Demographics & Income', render: (d) => (<><p><strong>Median Income:</strong> ${d?.medianIncome?.toLocaleString()}</p><p><strong>Price Ceiling:</strong> ${d?.priceCeiling}</p><p><strong>Neighborhood:</strong> {d?.neighborhoodType}</p></>) },
+                { key: 'agent4', title: 'Social Sentiment', render: (d) => (<><p><strong>Sentiment:</strong> {d?.sentimentScore}</p>{d?.rawData?.positiveThemes?.length > 0 && <p><strong>+:</strong> {d.rawData.positiveThemes.join(', ')}</p>}{d?.rawData?.negativeThemes?.length > 0 && <p><strong>−:</strong> {d.rawData.negativeThemes.join(', ')}</p>}</>) },
+                { key: 'agent8', title: 'Competitive Landscape', render: (d) => (<><p><strong>Avg Price:</strong> ${d?.avgCompetitorPrice}</p><p><strong>Strategy:</strong> {d?.strategyMode}</p><p><strong>Saturation:</strong> {d?.marketSaturation}</p>{d?.competitors?.map((c, i) => <p key={i} style={{ fontSize: '0.8rem' }}>• <strong>{c.name}</strong> ({c.priceRange})</p>)}</>) },
+                { key: 'agent5', title: 'Macroeconomic Indicators', render: (d) => (<><p><strong>Inflation:</strong> {d?.inflationRate}%</p><p><strong>Fed Rate:</strong> {d?.interestRate}%</p><p><strong>Outlook:</strong> {d?.spendingOutlook}</p></>) },
+                { key: 'agent6', title: 'Supply Chain & Costs', render: (d) => (<><p><strong>True Cost/Unit:</strong> ${d?.trueAcquisitionCostPerSellableUnit}</p><p><strong>Yield:</strong> {(d?.yieldRate * 100).toFixed(0)}%</p><p><strong>Markup:</strong> {d?.industryTypicalMarkup}</p></>) },
+                { key: 'agent7', title: 'Location & Mobility', render: (d) => (<><p><strong>Transit:</strong> {d?.transitStatus}</p><p><strong>Multiplier:</strong> {d?.footTrafficMultiplier}x</p><p><strong>Nearby:</strong> {d?.nearbyAnchors}</p></>) },
+                { key: 'agent3', title: 'Internal Data & Elasticity', render: (d) => (<><p><strong>PED:</strong> {d?.priceElasticityDemand}</p><p><strong>Avg Transaction:</strong> ${d?.avgTransactionValue}</p></>) },
+                { key: 'agent13', title: 'Financial Engineering', render: (d) => (<><p><strong>Margin:</strong> {d?.unitEconomics?.marginPercentage}%</p><p><strong>Break-Even:</strong> {d?.breakEvenAnalysis?.breakEvenUnits} units / ${d?.breakEvenAnalysis?.breakEvenRevenue?.toLocaleString()}</p><p><strong>Strategy Score:</strong> {(d?.financialStrategyScore || 0).toFixed(2)}</p></>) },
               ].map(({ key, title, render }) => (
                 <details key={key} className="research-card">
                   <summary>{title}</summary>
-                  <div style={{ marginTop:'0.75rem', fontSize:'0.85rem', color:'var(--text-secondary)' }}>
+                  <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                     {render(agentData?.[key])}
-                    {agentData?.[key]?.reasoning && <p style={{ marginTop:'0.5rem', fontStyle:'italic', fontSize:'0.8rem', color:'var(--text-dim)' }}>{agentData[key].reasoning}</p>}
+                    {agentData?.[key]?.reasoning && <p style={{ marginTop: '0.5rem', fontStyle: 'italic', fontSize: '0.8rem', color: 'var(--text-dim)' }}>{agentData[key].reasoning}</p>}
                     {renderSources(agentData?.[key]?.sources)}
                   </div>
                 </details>
@@ -594,31 +626,35 @@ export default function SimulatePage() {
           )}
 
           {/* Complete bar */}
-          <div className="glass-panel" style={{ background:'rgba(20,184,166,0.06)', borderColor:'rgba(20,184,166,0.2)', marginBottom:'1.25rem' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div className="glass-panel" style={{ background: 'rgba(20,184,166,0.06)', borderColor: 'rgba(20,184,166,0.2)', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ color:'var(--accent-teal)', margin:0 }}>Analysis Complete</h3>
-                <p style={{ margin:0, fontSize:'0.85rem' }}>
-                  Ask follow-up questions — they'll be appended to the report.
-                  {qaHistory.length > 0 && <span style={{ color:'var(--accent-cyan)' }}> ({qaHistory.length} Q&A included)</span>}
+                <h3 style={{ color: 'var(--accent-teal)', margin: 0 }}>
+                  {result ? 'Analysis Complete' : <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div className="spinner" style={{ width: '14px', height: '14px', margin: 0, borderWidth: '2px', borderTopColor: 'var(--accent-teal)' }}></div> Streaming Report...</span>}
+                </h3>
+                <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                  {result ? 'Ask follow-up questions — they\'ll be appended to the report.' : 'The orchestrator is securely building your report.'}
+                  {qaHistory.length > 0 && <span style={{ color: 'var(--accent-cyan)' }}> ({qaHistory.length} Q&A included)</span>}
                 </p>
               </div>
-              <button onClick={handleSaveWithQA} className="btn-primary">
-                {qaHistory.length > 0 ? 'Publish Report + Q&A' : 'Publish Report'}
-              </button>
+              {result && (
+                <button onClick={handleSaveWithQA} className="btn-primary">
+                  {qaHistory.length > 0 ? 'Publish Report + Q&A' : 'Publish Report'}
+                </button>
+              )}
             </div>
           </div>
 
           {/* Report + Chat */}
-          <div className="grid grid-cols-2" style={{ alignItems:'start', gridTemplateColumns:'1.4fr 1fr' }}>
-            <div className="artifact-content" style={{ marginTop:0, height:'700px', overflowY:'auto' }}>
+          <div className="grid grid-cols-2" style={{ alignItems: 'start', gridTemplateColumns: '1.4fr 1fr' }}>
+            <div className="artifact-content" style={{ marginTop: 0, height: '700px', overflowY: 'auto' }}>
               <Md>{getFullReport()}</Md>
             </div>
-            <div className="glass-panel" style={{ display:'flex', flexDirection:'column', height:'700px', padding:'1.25rem' }}>
-              <h3 style={{ borderBottom:'1px solid var(--border-subtle)', paddingBottom:'0.75rem', marginBottom:'0.75rem', fontSize:'1rem' }}>Follow-Up Questions</h3>
-              <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:'0.5rem' }}>
+            <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '700px', padding: '1.25rem' }}>
+              <h3 style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', marginBottom: '0.75rem', fontSize: '1rem' }}>Follow-Up Questions</h3>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {followUpMessages.length === 0 ? (
-                  <p style={{ color:'var(--text-dim)', fontSize:'0.85rem', fontStyle:'italic', textAlign:'center', margin:'auto' }}>
+                  <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', fontStyle: 'italic', textAlign: 'center', margin: 'auto' }}>
                     Ask about the report — the system can search the web for additional data.
                   </p>
                 ) : followUpMessages.map(m => (
@@ -626,18 +662,19 @@ export default function SimulatePage() {
                     <Md>{getMessageText(m)}</Md>
                   </div>
                 ))}
-                {followUpLoading && <div className="chat-bubble chat-bubble-assistant" style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}><div className="spinner" style={{ width:'14px', height:'14px', margin:0, borderWidth:'2px' }}></div><span style={{ fontSize:'0.85rem', color:'var(--text-dim)' }}>Researching...</span></div>}
-                <div ref={chatEndRef}></div>
+                {followUpLoading && <div className="chat-bubble chat-bubble-assistant" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div className="spinner" style={{ width: '14px', height: '14px', margin: 0, borderWidth: '2px' }}></div><span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>Researching...</span></div>}
+                {followUpError && <div style={{ color: '#ff6b6b', fontSize: '0.8rem', padding: '0.5rem', background: 'rgba(255,107,107,0.1)', borderRadius: '6px' }}>Error: {followUpError.message}</div>}
+                <div ref={followUpChatEndRef}></div>
               </div>
-              <form onSubmit={sendFollowUp} style={{ display:'flex', gap:'0.5rem', marginTop:'0.75rem' }}>
-                <input value={followUpInputText} onChange={(e) => setFollowUpInputText(e.target.value)} placeholder="e.g. What if I lowered the price by $1?" style={{ flex:1 }} />
-                <button type="submit" className="btn-primary" style={{ padding:'0 1.25rem' }} disabled={followUpLoading}>Ask</button>
+              <form onSubmit={sendFollowUp} style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                <input value={followUpInputText} onChange={(e) => setFollowUpInputText(e.target.value)} placeholder="e.g. What if I lowered the price by $1?" style={{ flex: 1 }} />
+                <button type="submit" className="btn-primary" style={{ padding: '0 1.25rem' }} disabled={followUpLoading}>Ask</button>
               </form>
             </div>
           </div>
 
-          <div style={{ marginTop:'1.5rem', textAlign:'center' }}>
-            <button onClick={() => { setStep(STEPS.UPLOAD); setResult(null); setAgentData(null); setProgressBatches([]); setAgentStates({}); setAgentQuestions([]); setQaHistory([]); setImageFiles([]); setImageUrls([]); setBusinessFiles([]); setInterviewReady(false); setParsedInputs(null); }} className="btn-secondary">
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <button onClick={() => { setStep(STEPS.UPLOAD); setResult(null); setStreamingReport(''); setAgentData(null); setProgressBatches([]); setAgentStates({}); setAgentQuestions([]); setQaHistory([]); setImageFiles([]); setImageUrls([]); setBusinessFiles([]); setInterviewReady(false); setParsedInputs(null); }} className="btn-secondary">
               Start New Analysis
             </button>
           </div>

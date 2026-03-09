@@ -7,7 +7,7 @@ import { createOpenAI } from '@ai-sdk/openai';
  * This ensures all 9 Agents pull from the exact same LLM configuration point.
  * This file allows users to swap between OpenAI, Anthropic, Gemini, etc. in one place.
  */
-export function getAgentModel(customModelName = 'gpt-4.1-nano') {
+export function getAgentModel(customModelName = 'gpt-4o-mini') {
   // Currently defaults to OpenAI.
   // To swap to Anthropic or Gemini, install the respective @ai-sdk package,
   // ensure the API Key is set in your .env, and swap the instantiation below.

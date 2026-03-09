@@ -1,23 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-  --bg-primary: #0a0b0f;
-  --bg-secondary: #111318;
-  --bg-card: #15171e;
-  --bg-elevated: #1a1d26;
-  --text-primary: #f0f2f5;
-  --text-secondary: #a1a7b4;
-  --text-dim: #6b7280;
-  --accent-blue: #3b82f6;
-  --accent-cyan: #06b6d4;
-  --accent-teal: #14b8a6;
-  --accent-emerald: #10b981;
-  --accent-gradient: linear-gradient(135deg, #3b82f6, #06b6d4, #14b8a6);
-  --accent-glow: rgba(59, 130, 246, 0.15);
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-active: rgba(59, 130, 246, 0.3);
-  --shadow-lg: 0 20px 60px -15px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.1);
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-dim: #64748b;
+  --accent-blue: #2563eb;
+  --accent-cyan: #0ea5e9;
+  --accent-teal: #0d9488;
+  --accent-emerald: #059669;
+  --accent-gradient: linear-gradient(135deg, #2563eb, #0ea5e9, #0d9488);
+  --accent-glow: rgba(37, 99, 235, 0.1);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-active: rgba(37, 99, 235, 0.25);
+  --shadow-lg: 0 10px 40px -10px rgba(15, 23, 42, 0.05);
+  --shadow-glow: 0 0 25px rgba(37, 99, 235, 0.08);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -52,9 +52,9 @@ body::before {
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(20, 184, 166, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.03) 0%, transparent 70%);
+    radial-gradient(ellipse at 20% 0%, rgba(37, 99, 235, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(13, 148, 136, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(14, 165, 233, 0.02) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -129,7 +129,7 @@ p {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
 }
 
 .glass-panel:hover {
@@ -240,7 +240,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(15, 23, 42, 0.04);
   border-color: var(--text-secondary);
   color: var(--text-primary);
 }
@@ -359,7 +359,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .artifact-content tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(15, 23, 42, 0.02);
 }
 
 .artifact-content tr:hover {
@@ -396,7 +396,7 @@ input::placeholder, textarea::placeholder {
   align-items: center;
   padding: 1rem 2rem;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(10, 11, 15, 0.85);
+  background: rgba(248, 250, 252, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   position: sticky;
@@ -486,12 +486,12 @@ details[open] {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
+  background: rgba(15, 23, 42, 0.1);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(15, 23, 42, 0.2);
 }
 
 /* Chat bubble styles */

@@ -3,7 +3,8 @@ import { getAgentModel } from '@/lib/ai-provider';
 import { webSearchTool } from '@/lib/tools';
 import { z } from 'zod';
 
-export async function agent1_Vision(inputAesthetic, imageUrl, isExistingBusiness = true, userAnswer = null) {
+export async function agent1_Vision(inputs, imageUrl, userAnswer = null) {
+  const { aesthetic, isExistingBusiness } = inputs;
   console.log('[Vision] Analyzing brand aesthetic profile...');
 
   try {
@@ -14,13 +15,14 @@ Use web_search to research comparable businesses in this category and how design
 
 Cite all URLs found in your sources array. Explain step-by-step reasoning.
 
-Business Aesthetic Description: "${inputAesthetic}"
+Business Aesthetic Description: "${aesthetic}"
+CONTEXT: ${JSON.stringify(inputs)}
 ${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. It does not exist yet. Keep your analysis focused on the proposed vision.' : 'Context: THIS IS AN EXISTING, ESTABLISHED BUSINESS. Analyze their current brand and visual identity.'}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`;
 
     let requestBody = {
       model: getAgentModel('gpt-4.1-nano'),
-      tools: { webSearch: webSearchTool },
+      tools: { web_search: webSearchTool },
       maxSteps: 3,
       schema: z.object({
         name: z.string(),

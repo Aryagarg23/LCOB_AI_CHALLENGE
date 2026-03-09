@@ -1,16 +1,16 @@
 employee_id,role,hourly_rate,hours_per_week
-E001,Manager,34.95,37
-E002,Roaster,26.37,32
-E003,Manager,30.35,25
-E004,Roaster,25.08,26
-E005,Barista,17.27,29
-E006,Roaster,26.89,30
-E007,Roaster,23.84,36
-E008,Manager,30.17,23
-E009,Manager,26.40,22
-E010,Shift Lead,23.83,32
-E011,Roaster,24.62,26
-E012,Shift Lead,23.71,31
-E013,Roaster,26.65,39
-E014,Roaster,27.39,34
-E015,Roaster,26.56,30
+E001,Barista,19.16,26
+E002,Barista,18.47,36
+E003,Manager,25.94,36
+E004,Manager,26.05,39
+E005,Barista,19.02,32
+E006,Roaster,26.66,30
+E007,Barista,16.48,22
+E008,Roaster,27.99,21
+E009,Manager,27.77,32
+E010,Shift Lead,21.56,31
+E011,Barista,18.65,30
+E012,Manager,34.47,30
+E013,Barista,17.85,28
+E014,Shift Lead,21.62,31
+E015,Shift Lead,20.25,37

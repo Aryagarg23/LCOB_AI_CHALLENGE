@@ -10,7 +10,7 @@ const executeNodeScript = tool({
   description: 'Executes a Node.js script to analyze CSV data files. Use fs module with exact file paths. Console.log results as JSON.',
   parameters: z.object({
     scriptCode: z.string().describe('Complete Node.js code. Must console.log() results as JSON.')
-  }),
+  }).strict(),
   execute: async ({ scriptCode }) => {
     try {
       const tmpPath = path.join(process.cwd(), '.tmp_eval_script.js');
@@ -24,7 +24,8 @@ const executeNodeScript = tool({
   }
 });
 
-export async function agent3_SalesHistorian(businessAgeMonths, productType, businessType, isExistingBusiness = true, userAnswer = null) {
+export async function agent3_SalesHistorian(inputs, isExistingBusiness = true, userAnswer = null) {
+  const { businessAgeMonths, productType, businessType, additionalContext } = inputs;
   console.log(`[Sales Data] Processing internal business data...`);
 
   let dataDir = path.join(process.cwd(), 'public', 'data').replace(/\\/g, '/');
@@ -33,7 +34,7 @@ export async function agent3_SalesHistorian(businessAgeMonths, productType, busi
     const isPreLaunch = !isExistingBusiness;
     const { object } = await generateObject({
       model: getAgentModel('gpt-4.1-nano'),
-      tools: { webSearch: webSearchTool, runAnalysis: executeNodeScript },
+      tools: { web_search: webSearchTool, runAnalysis: executeNodeScript },
       maxSteps: 5,
       schema: z.object({
         name: z.string(),
@@ -56,6 +57,7 @@ Use 'runAnalysis' tool to write Node.js that:
 3. Console.log JSON: { weeklyOverhead, elasticity, avgPrice, totalTransactions }
 
 Parse CSVs via string split. Business Type: "${businessType}", Age: ${businessAgeMonths} months, Product: "${productType}"
+CONTEXT: ${JSON.stringify(inputs)}
 ${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. You are estimating theoretical/projected elasticity.' : ''}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`,
     });

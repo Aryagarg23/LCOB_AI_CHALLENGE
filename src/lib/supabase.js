@@ -18,7 +18,7 @@ export async function uploadArtifact(content, filename) {
       .from('artifacts')
       .upload(filename, content, {
         contentType: 'text/markdown',
-        upsert: true,
+        upsert: false,
       });
 
     if (error) throw error;
@@ -46,7 +46,7 @@ export async function uploadImage(file, filename) {
     const { data, error } = await supabase.storage
       .from('artifacts')
       .upload(`images/${filename}`, file, {
-        upsert: true,
+        upsert: false,
       });
 
     if (error) throw error;

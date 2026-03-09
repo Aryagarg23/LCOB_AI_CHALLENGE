@@ -1,0 +1,4 @@
+{
+  "openai": "SUCCESS: Connected and reasoning.",
+  "supabase": "EXCEPTION: supabaseUrl is required."
+}
