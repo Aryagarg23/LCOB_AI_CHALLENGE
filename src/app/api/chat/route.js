@@ -1,10 +1,10 @@
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText, generateText, convertToModelMessages } from 'ai';
 import { getAgentModel } from '@/lib/ai-provider';
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { messages, artifactContext } = body;
+    const { messages, artifactContext, stream = true } = body;
 
     console.log('[Chat API] Received request:', {
       messageCount: messages?.length,
@@ -33,16 +33,28 @@ Always:
 Context of the Strategy Report:
 ${artifactContext || 'No report context available. Speak generally about pricing strategy methodology.'}`;
 
-    // Convert UIMessages to model messages for streamText
+    // Convert UIMessages to model messages for streamText / generateText
     const modelMessages = await convertToModelMessages(messages);
 
-    const result = streamText({
-      model: getAgentModel('gpt-4o-mini'),
-      system: systemPrompt,
-      messages: modelMessages,
-    });
+    if (stream) {
+      const result = streamText({
+        model: getAgentModel('gpt-4o-mini'),
+        system: systemPrompt,
+        messages: modelMessages,
+      });
 
-    return result.toUIMessageStreamResponse();
+      return result.toUIMessageStreamResponse();
+    } else {
+      const { text } = await generateText({
+        model: getAgentModel('gpt-4o-mini'),
+        system: systemPrompt,
+        messages: modelMessages,
+      });
+
+      return new Response(JSON.stringify({ text }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
   } catch (error) {
     console.error('[Chat API Error]', error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });

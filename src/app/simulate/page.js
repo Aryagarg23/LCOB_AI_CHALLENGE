@@ -59,6 +59,9 @@ export default function SimulatePage() {
 
   // Post-analysis Q&A
   const [qaHistory, setQaHistory] = useState([]);
+  const [followUpMessages, setFollowUpMessages] = useState([]);
+  const [followUpLoading, setFollowUpLoading] = useState(false);
+  const [followUpError, setFollowUpError] = useState(null);
 
   // Build file context string for interview system prompt
   const getFileContext = () => {
@@ -93,28 +96,9 @@ export default function SimulatePage() {
     }
   }, [interviewMessages, interviewReady]); // Added interviewReady to dependencies
 
-  // Post-report follow-up chat — custom transport reads resultRef at send time
-  const resultRef = useRef(result);
-  resultRef.current = result;
 
-  const followUpTransport = useMemo(() => ({
-    sendMessages(opts) {
-      const transport = new DefaultChatTransport({
-        api: '/api/chat',
-        body: { artifactContext: resultRef.current || '' },
-      });
-      return transport.sendMessages(opts);
-    },
-  }), []);
-
-  const { messages: followUpMessages, sendMessage: sendFollowUpMsg, status: followUpStatus, error: followUpError } = useChat({
-    id: 'followup-chat',
-    transport: followUpTransport,
-    onError: (err) => console.error('[Follow-Up Chat Error]', err),
-  });
 
   const interviewLoading = interviewStatus === 'streaming' || interviewStatus === 'submitted';
-  const followUpLoading = followUpStatus === 'streaming' || followUpStatus === 'submitted';
 
   const sendInterview = (e) => {
     e?.preventDefault?.();
@@ -123,27 +107,45 @@ export default function SimulatePage() {
     setInterviewInputText('');
   };
 
-  const sendFollowUp = (e) => {
+  const sendFollowUp = async (e) => {
     e?.preventDefault?.();
-    if (!followUpInputText.trim() || followUpLoading) return;
-    sendFollowUpMsg({ text: followUpInputText });
+    const text = followUpInputText.trim();
+    if (!text || followUpLoading) return;
+
     setFollowUpInputText('');
+    setFollowUpLoading(true);
+    setFollowUpError(null);
+
+    const newUserMsg = { id: Date.now().toString(), role: 'user', content: text };
+    setFollowUpMessages(prev => [...prev, newUserMsg]);
+
+    try {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...followUpMessages, newUserMsg],
+          artifactContext: result || '',
+          stream: false
+        })
+      });
+
+      if (!resp.ok) throw new Error('Failed to get response');
+      
+      const data = await resp.json();
+      const assistantMsg = { id: (Date.now() + 1).toString(), role: 'assistant', content: data.text || data.content || '' };
+      
+      setFollowUpMessages(prev => [...prev, assistantMsg]);
+      setQaHistory(prev => [...prev, { question: text, answer: assistantMsg.content }]);
+    } catch (err) {
+      setFollowUpError(err);
+      console.error('[Follow-Up Error]', err);
+    } finally {
+      setFollowUpLoading(false);
+    }
   };
 
-  useEffect(() => {
-    if (followUpMessages.length >= 2) {
-      const pairs = [];
-      for (let i = 0; i < followUpMessages.length; i += 2) {
-        if (followUpMessages[i]?.role === 'user' && followUpMessages[i + 1]?.role === 'assistant') {
-          pairs.push({ question: getMessageText(followUpMessages[i]), answer: getMessageText(followUpMessages[i + 1]) });
-        }
-      }
-      setQaHistory(prev => {
-        if (JSON.stringify(prev) === JSON.stringify(pairs)) return prev;
-        return pairs;
-      });
-    }
-  }, [followUpMessages]);
+
 
   useEffect(() => {
     interviewChatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
