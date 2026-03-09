@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 
 const STEPS = {
   UPLOAD: 0,
@@ -39,6 +40,8 @@ export default function SimulatePage() {
   // Interview state
   const [interviewReady, setInterviewReady] = useState(false);
   const [parsedInputs, setParsedInputs] = useState(null);
+  const [interviewInputText, setInterviewInputText] = useState('');
+  const [followUpInputText, setFollowUpInputText] = useState('');
   const chatEndRef = useRef(null);
 
   // Analysis state
@@ -61,11 +64,15 @@ export default function SimulatePage() {
     return ctx;
   };
 
-  // Interview chat
-  const { messages: interviewMessages, input: interviewInputText, handleInputChange: handleInterviewInputChange, handleSubmit: sendInterview, status: interviewStatus } = useChat({
-    id: 'interview-chat',
+  // Interview chat — transport carries api + body
+  const interviewTransport = useMemo(() => new DefaultChatTransport({
     api: '/api/interview',
     body: { businessContext: getFileContext() },
+  }), []);
+
+  const { messages: interviewMessages, sendMessage: sendInterviewMsg, status: interviewStatus } = useChat({
+    id: 'interview-chat',
+    transport: interviewTransport,
   });
 
   // Watch for [READY_TO_ANALYZE] — auto-transition
@@ -73,22 +80,42 @@ export default function SimulatePage() {
     const lastMsg = interviewMessages[interviewMessages.length - 1];
     if (lastMsg?.role === 'assistant' && getMessageText(lastMsg).includes('[READY_TO_ANALYZE]') && !interviewReady) {
       setInterviewReady(true);
-      // Auto-launch analysis after a brief delay
       setTimeout(() => {
         handleLaunchAnalysis();
       }, 1500);
     }
   }, [interviewMessages]);
 
-  // Post-report follow-up chat
-  const { messages: followUpMessages, input: followUpInputText, handleInputChange: handleFollowUpInputChange, handleSubmit: sendFollowUp, status: followUpStatus } = useChat({
-    id: 'followup-chat',
+  // Post-report follow-up chat — body is a function so it dynamically resolves result
+  const resultRef = useRef(result);
+  resultRef.current = result;
+
+  const followUpTransport = useMemo(() => new DefaultChatTransport({
     api: '/api/chat',
-    body: { artifactContext: result },
+    body: () => ({ artifactContext: resultRef.current || '' }),
+  }), []);
+
+  const { messages: followUpMessages, sendMessage: sendFollowUpMsg, status: followUpStatus } = useChat({
+    id: 'followup-chat',
+    transport: followUpTransport,
   });
 
   const interviewLoading = interviewStatus === 'streaming' || interviewStatus === 'submitted';
   const followUpLoading = followUpStatus === 'streaming' || followUpStatus === 'submitted';
+
+  const sendInterview = (e) => {
+    e?.preventDefault?.();
+    if (!interviewInputText.trim() || interviewLoading) return;
+    sendInterviewMsg({ text: interviewInputText });
+    setInterviewInputText('');
+  };
+
+  const sendFollowUp = (e) => {
+    e?.preventDefault?.();
+    if (!followUpInputText.trim() || followUpLoading) return;
+    sendFollowUpMsg({ text: followUpInputText });
+    setFollowUpInputText('');
+  };
 
   useEffect(() => {
     if (followUpMessages.length >= 2) {
@@ -394,7 +421,7 @@ export default function SimulatePage() {
 
             {!interviewReady && (
               <form onSubmit={sendInterview} style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <input value={interviewInputText} onChange={handleInterviewInputChange} placeholder="e.g. I run a cotton mill in El Paso, TX..." style={{ flex: 1 }} />
+                <input value={interviewInputText} onChange={(e) => setInterviewInputText(e.target.value)} placeholder="e.g. I run a cotton mill in El Paso, TX..." style={{ flex: 1 }} />
                 <button type="submit" className="btn-primary" style={{ padding: '0 1.25rem' }} disabled={interviewLoading}>Send</button>
               </form>
             )}
@@ -603,7 +630,7 @@ export default function SimulatePage() {
                 <div ref={chatEndRef}></div>
               </div>
               <form onSubmit={sendFollowUp} style={{ display:'flex', gap:'0.5rem', marginTop:'0.75rem' }}>
-                <input value={followUpInputText} onChange={handleFollowUpInputChange} placeholder="e.g. What if I lowered the price by $1?" style={{ flex:1 }} />
+                <input value={followUpInputText} onChange={(e) => setFollowUpInputText(e.target.value)} placeholder="e.g. What if I lowered the price by $1?" style={{ flex:1 }} />
                 <button type="submit" className="btn-primary" style={{ padding:'0 1.25rem' }} disabled={followUpLoading}>Ask</button>
               </form>
             </div>

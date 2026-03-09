@@ -20,5 +20,5 @@ export function getAgentModel(customModelName = 'gpt-4.1-nano') {
   // const gemini = createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_API_KEY });
   // return gemini('gemini-1.5-pro');
 
-  return openai(customModelName, { structuredOutputs: false });
+  return openai(customModelName);
 }
