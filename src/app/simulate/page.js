@@ -284,7 +284,7 @@ export default function SimulatePage() {
                 const safeName = nameStr.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
                 const smartFilename = `${safeName}_strategy_report_${Date.now()}.md`;
 
-                try { await fetch('/api/artifacts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: event.report, filename: smartFilename }) }); } catch (_) { }
+                // Removed auto-save: Artifact saving should only trigger explicitly via handleSaveWithQA
               }
 
               if (event.type === 'error') throw new Error(event.error);
