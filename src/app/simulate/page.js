@@ -39,8 +39,6 @@ export default function SimulatePage() {
   // Interview state
   const [interviewReady, setInterviewReady] = useState(false);
   const [parsedInputs, setParsedInputs] = useState(null);
-  const [interviewInputText, setInterviewInputText] = useState('');
-  const [followUpInputText, setFollowUpInputText] = useState('');
   const chatEndRef = useRef(null);
 
   // Analysis state
@@ -64,7 +62,7 @@ export default function SimulatePage() {
   };
 
   // Interview chat
-  const { messages: interviewMessages, append: sendInterviewMessage, status: interviewStatus } = useChat({
+  const { messages: interviewMessages, input: interviewInputText, handleInputChange: handleInterviewInputChange, handleSubmit: sendInterview, status: interviewStatus } = useChat({
     id: 'interview-chat',
     api: '/api/interview',
     body: { businessContext: getFileContext() },
@@ -83,7 +81,7 @@ export default function SimulatePage() {
   }, [interviewMessages]);
 
   // Post-report follow-up chat
-  const { messages: followUpMessages, append: sendFollowUpMessage, status: followUpStatus } = useChat({
+  const { messages: followUpMessages, input: followUpInputText, handleInputChange: handleFollowUpInputChange, handleSubmit: sendFollowUp, status: followUpStatus } = useChat({
     id: 'followup-chat',
     api: '/api/chat',
     body: { artifactContext: result },
@@ -91,18 +89,6 @@ export default function SimulatePage() {
 
   const interviewLoading = interviewStatus === 'streaming' || interviewStatus === 'submitted';
   const followUpLoading = followUpStatus === 'streaming' || followUpStatus === 'submitted';
-
-  const sendInterview = () => {
-    if (!interviewInputText.trim() || interviewLoading) return;
-    sendInterviewMessage({ role: 'user', content: interviewInputText });
-    setInterviewInputText('');
-  };
-
-  const sendFollowUp = () => {
-    if (!followUpInputText.trim() || followUpLoading) return;
-    sendFollowUpMessage({ role: 'user', content: followUpInputText });
-    setFollowUpInputText('');
-  };
 
   useEffect(() => {
     if (followUpMessages.length >= 2) {
@@ -407,10 +393,10 @@ export default function SimulatePage() {
             </div>
 
             {!interviewReady && (
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <input value={interviewInputText} onChange={(e) => setInterviewInputText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendInterview(); }} placeholder="e.g. I run a cotton mill in El Paso, TX..." style={{ flex: 1 }} />
-                <button type="button" className="btn-primary" style={{ padding: '0 1.25rem' }} disabled={interviewLoading} onClick={sendInterview}>Send</button>
-              </div>
+              <form onSubmit={sendInterview} style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <input value={interviewInputText} onChange={handleInterviewInputChange} placeholder="e.g. I run a cotton mill in El Paso, TX..." style={{ flex: 1 }} />
+                <button type="submit" className="btn-primary" style={{ padding: '0 1.25rem' }} disabled={interviewLoading}>Send</button>
+              </form>
             )}
           </div>
         </div>
@@ -616,10 +602,10 @@ export default function SimulatePage() {
                 {followUpLoading && <div className="chat-bubble chat-bubble-assistant" style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}><div className="spinner" style={{ width:'14px', height:'14px', margin:0, borderWidth:'2px' }}></div><span style={{ fontSize:'0.85rem', color:'var(--text-dim)' }}>Researching...</span></div>}
                 <div ref={chatEndRef}></div>
               </div>
-              <div style={{ display:'flex', gap:'0.5rem', marginTop:'0.75rem' }}>
-                <input value={followUpInputText} onChange={(e) => setFollowUpInputText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendFollowUp(); }} placeholder="e.g. What if I lowered the price by $1?" style={{ flex:1 }} />
-                <button type="button" className="btn-primary" style={{ padding:'0 1.25rem' }} disabled={followUpLoading} onClick={sendFollowUp}>Ask</button>
-              </div>
+              <form onSubmit={sendFollowUp} style={{ display:'flex', gap:'0.5rem', marginTop:'0.75rem' }}>
+                <input value={followUpInputText} onChange={handleFollowUpInputChange} placeholder="e.g. What if I lowered the price by $1?" style={{ flex:1 }} />
+                <button type="submit" className="btn-primary" style={{ padding:'0 1.25rem' }} disabled={followUpLoading}>Ask</button>
+              </form>
             </div>
           </div>
 
