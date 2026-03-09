@@ -27,27 +27,27 @@ export async function agent8_CompetitorAI(zipcode, productType, businessType, bu
         impact: z.string().describe('How competition constrains or enables pricing'),
         reasoning: z.string().describe('Detailed competitive analysis citing specific search results and URLs'),
         sources: z.array(z.string()).describe('URLs of competitor websites, reviews, directories where you ACTUALLY found them'),
-        clarificationQuestion: z.string().nullable().describe(isPreLaunch ? 'Since this is PRE-LAUNCH, ask who they consider their aspirational competitors or role models. Otherwise null.' : 'If no competitors found, ask. Otherwise null.'),
+        clarificationQuestion: z.string().nullable().describe(isPreLaunch ? 'Since this is PRE-LAUNCH, ask who they consider their aspirational competitors or role models. Otherwise null.' : 'If you cannot find their specific business or direct local competitors, ask who their main competitors are. Otherwise null.'),
       }),
       prompt: `You are a competitive intelligence analyst. Research the REAL competitive landscape for ${businessType || 'retail'} businesses near ZIP "${zipcode}" selling "${productType}".
 
 CRITICAL ACCURACY RULES:
 1. ONLY report competitors you ACTUALLY find via web search with real URLs. Do NOT invent business names.
-2. If you search and find no specific competitors, say "No specific local competitors found via web search" — do NOT make up names like "Sunny Cotton Farms" or "Green Valley LLC"
-3. For agriculture/farming: search for actual operations in the region (e.g. "cotton farms near El Paso TX", "Texas cotton producers")
+2. If you search and find no specific competitors, say "No specific local competitors found via web search"
+3. Since this might be an established business, DO NOT list the client's own business as a competitor. Look for *other* businesses doing the same thing.
 4. For each competitor you DO find, include the URL where you found them
 5. If this is a commodity business (farming, mining, etc.), note that competition is price-based at commodity exchanges, not local retail
 6. Report WHOLESALE/COMMODITY prices, not retail prices, for commodity businesses
 
 Search at least 3 times:
-1. "${businessType} near ${zipcode}" or "${businessType} in [city name for ${zipcode}]"
-2. "${productType} producers near ${zipcode}" or "${businessType} directory ${zipcode}"
-3. "${productType} price ${zipcode}" or "${businessType} market prices"
+1. "${businessType} near ${zipcode}"
+2. "Competitors to ${productType} businesses in ${zipcode}"
+3. "Similar businesses to ${businessType} in ${zipcode}"
 
 If you cannot find real competitors with real URLs, report an empty competitors array and explain in reasoning that data was not available — this is ALWAYS better than fabricating businesses.
 
 ZIP: "${zipcode}", Business: "${businessType}", Product: "${productType}"
-${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. Focus on the market they are ABOUT to enter.' : ''}
+${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. Focus on the market they are ABOUT to enter.' : 'Context: THIS IS AN ESTABLISHED BUSINESS. Find their actual competition.'}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`,
     });
     return object;
