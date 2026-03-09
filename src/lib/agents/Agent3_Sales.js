@@ -47,16 +47,17 @@ export async function agent3_SalesHistorian(inputs, isExistingBusiness = true, u
         sources: z.array(z.string()).describe('Data files and web sources used'),
         clarificationQuestion: z.string().nullable().describe(isPreLaunch ? 'Since this is a PRE-LAUNCH business with no data, ask what their PROJECTED revenue breakdown or target margins are instead. Otherwise null.' : 'If the data is insufficient, ask about revenue breakdown, top-selling products, or seasonal patterns. Otherwise null.'),
       }),
-      prompt: `You are a data science analyst for a ${businessType || 'retail'} business. Analyze internal databases:
-1. ${dataDir}/employee_data.csv — Employee roles, hourly rates, weekly hours
-2. ${dataDir}/customer_transactions.csv — 5000+ transactions with prices, quantities, categories
+      prompt: `You are a data science analyst for a "${businessType || 'retail'}" business. 
 
-Use 'runAnalysis' tool to write Node.js that:
-1. Reads employee CSV → calculates total weekly labor overhead
-2. Reads transactions CSV → estimates Price Elasticity of Demand for "${productType}" (or closest category match)
-3. Console.log JSON: { weeklyOverhead, elasticity, avgPrice, totalTransactions }
+Your job is to estimate internal operating costs and Price Elasticity of Demand for "${productType}" (or the closest category match).
+If the user has provided actual operational data or files, use the 'runAnalysis' tool to write Node.js code to parse and calculate metrics.
+If NO raw data was provided, you MUST rely on industry benchmarks to estimate weekly labor overhead and elasticity.
 
-Parse CSVs via string split. Business Type: "${businessType}", Age: ${businessAgeMonths} months, Product: "${productType}"
+CRITICAL RULES:
+1. Estimate Price Elasticity of Demand and fixed overhead based on the business type and location context.
+2. SPECULATION RULE: If actual data is missing and you must make assumptions or speculate based on common sense, **you MUST put all speculative statements, numbers, and assumptions in italics** (e.g., *we assume a weekly overhead of $2,000 based on standard retail models*).
+
+Business Type: "${businessType}", Age: ${businessAgeMonths} months, Product: "${productType}"
 CONTEXT: ${JSON.stringify(inputs)}
 ${isPreLaunch ? 'Context: THIS IS A PRE-LAUNCH / NEW BUSINESS. You are estimating theoretical/projected elasticity.' : ''}
 ${userAnswer ? `\nUSER ANSWER TO YOUR PREVIOUS CLARIFICATION QUESTION:\n"${userAnswer}"\nHIGHEST PRIORITY: use this new information to finalize your analysis.` : ''}`,

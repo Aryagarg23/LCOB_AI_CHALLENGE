@@ -111,6 +111,7 @@ CRITICAL FORMATTING RULES:
 - DO NOT mention "Agent" or "agent" in the report. Instead, refer to the source of the data.
 - Write in a clear, concise, and direct style.
 - **CRITICAL LINK RULE**: You MUST natively embed the provided source URLs directly into the sentences of the report as Markdown links (e.g., \`[according to local demographic data](http://...)\`). Do NOT just list them at the bottom. Use the sources provided in the VALIDATED DATA section.
+- **SPECULATION RULE**: If the data from the agents contains explicit assumptions or speculations (often marked in italics by the agents), you MUST preserve those italics in the final report to clearly indicate to the user that the data is speculative or an estimation based on common sense.
 
 CRITICAL DATA QUALITY RULES:
 - If a competitor name looks fabricated, say "Competitor data requires verification"

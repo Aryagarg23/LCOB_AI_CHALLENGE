@@ -36,15 +36,17 @@ export async function agent6_Commodities(inputs, userAnswer = null) {
 
 CRITICAL ACCURACY RULES:
 1. Search for ACTUAL wholesale or raw material costs — NOT retail prices.
-2. USE PRECISE CONSUMPTION UNITS (e.g., for Coffee: calculate grams of beans per 12oz cup, usually 15-20g, NOT the weight of the final liquid).
+2. USE PRECISE CONSUMPTION UNITS (e.g., for a beverage, calculate raw ingredients per cup; for retail, calculate unit acquisition cost; for service, calculate consumables per hour). Do NOT be specific to just coffee unless requested.
 3. Adapt calculations based on the business category ("${businessType}"):
-   - FOR FOOD/BEV: Research wholesale ingredient costs. **CRITICAL: Include ALL marginal components: raw materials, packaging (cups/lids), and direct additives (milk/syrups).**
+   - FOR FOOD/BEV: Research wholesale ingredient costs. **CRITICAL: Include ALL marginal components: raw materials, packaging, and direct additives.**
    - FOR RESALE (Used/Vintage): Research bulk lot/bale costs. Calculate YIELD RATE (% sellable). TRUE COST = Acquisition ÷ Yield.
    - FOR RETAIL (New): Research wholesale/distributor prices for "${productType}".
    - TARIFF IMPACT: If ingredients/products are imported, explain HOW tariffs increase wholesale costs.
    - FOR SERVICES: Research hourly labor rates + consumables used per appointment.
-4. **Break down ALL cost components: materials, labor (regional min wage + 20% overhead), energy, transport, and packaging.**
-4. Calculate INDUSTRY TYPICAL MARKUP for "${businessType}" (e.g., 2x, 3x, 5x).
+4. **Break down ALL cost components: materials, labor (regional min wage + overhead), energy, transport, and packaging.**
+5. **LOGISTICS & LOCATION PREMIUM:** Strongly consider the geographic location. If the location is remote or features harsh environments (e.g., Antarctica, remote islands), the sourcing of raw materials, freight, and energy will be significantly higher due to complex supply chains. Explicitly factor these extreme logistical premiums into your marginal cost floor.
+6. Calculate INDUSTRY TYPICAL MARKUP for "${businessType}" (e.g., 2x, 3x, 5x).
+7. **SPECULATION RULE:** If specific cost information is unavailable, use common sense to speculate. **You MUST put all speculative statements, assumptions, and estimated numbers in italics** (e.g., *freight costs to Antarctica are estimated to add a 300% premium to standard wholesale rates*).
 
 SEARCH STRATEGY:
 1. "wholesale cost of ${productType} 2024 2025" or "bulk ${productType} supplier prices"
