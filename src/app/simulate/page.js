@@ -324,6 +324,29 @@ export default function SimulatePage() {
     } catch (e) { setError(e.message); }
   };
 
+  const handleDownloadReport = () => {
+    try {
+      const reportText = getFullReport();
+      if (!reportText) return;
+
+      const nameStr = parsedInputs?.businessName || parsedInputs?.businessType || 'business';
+      const safeName = nameStr.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      const filename = `${safeName}_strategy_report.md`;
+
+      const blob = new Blob([reportText], { type: 'text/markdown' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to download report', e);
+    }
+  };
+
   const renderSources = (sources) => {
     if (!sources || sources.length === 0) return null;
     return (
@@ -638,9 +661,14 @@ export default function SimulatePage() {
                 </p>
               </div>
               {result && (
-                <button onClick={handleSaveWithQA} className="btn-primary">
-                  {qaHistory.length > 0 ? 'Publish Report + Q&A' : 'Publish Report'}
-                </button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button onClick={handleDownloadReport} className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>
+                    Download Markdown
+                  </button>
+                  <button onClick={handleSaveWithQA} className="btn-primary">
+                    {qaHistory.length > 0 ? 'Publish Report + Q&A' : 'Publish Report'}
+                  </button>
+                </div>
               )}
             </div>
           </div>

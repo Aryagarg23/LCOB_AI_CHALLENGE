@@ -31,6 +31,23 @@ function ReportViewer({ file, onClose }) {
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  const handleDownload = () => {
+    if (!content) return;
+    try {
+      const blob = new Blob([content], { type: 'text/markdown' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed', err);
+    }
+  };
+
   return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -73,10 +90,15 @@ function ReportViewer({ file, onClose }) {
             Generated {new Date(file.created_at).toLocaleString()} · Press Esc to close
           </p>
         </div>
-        <a href={file.publicUrl} target="_blank" rel="noopener noreferrer"
-          className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
-          ↗ Open Raw
-        </a>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={handleDownload} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} disabled={loading}>
+            ↓ Download Markdown
+          </button>
+          <a href={file.publicUrl} target="_blank" rel="noopener noreferrer"
+            className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+            ↗ Open Raw
+          </a>
+        </div>
       </div>
 
       {/* Report Content */}
